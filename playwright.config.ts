@@ -5,12 +5,12 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
 export default defineConfig({
   testDir: 'tests/e2e',
   use: {
-    baseURL: 'http://localhost:4321',
+    baseURL: 'http://localhost:4331',
     launchOptions: { executablePath },
   },
   webServer: {
-    command: 'npm run build && npm run preview -- --port 4321 --ignore-lock',
-    url: 'http://localhost:4321',
+    command: 'npm run build && npm run preview -- --port 4331 --ignore-lock',
+    url: 'http://localhost:4331',
     reuseExistingServer: false,
     timeout: 180_000,
   },
