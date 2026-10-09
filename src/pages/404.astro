@@ -1,0 +1,36 @@
+---
+import Base from '../layouts/Base.astro';
+---
+
+<Base title="Not found · Mikołaj Bigaj" description="This page does not exist.">
+  <h1 class="page-title">Signal lost</h1>
+  <p class="line">That page is not on the board.</p>
+  <a class="back" href="/">Back to the control room</a>
+</Base>
+
+<style>
+  .page-title {
+    margin: 0;
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .line {
+    margin: 0;
+    color: var(--text-2);
+  }
+  .back {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  @media (max-width: 520px) {
+    .page-title {
+      font-size: 32px;
+    }
+  }
+</style>
