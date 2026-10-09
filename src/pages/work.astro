@@ -1,0 +1,167 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import SkillChip from '../components/SkillChip.astro';
+import BlueprintFigure from '../components/BlueprintFigure.astro';
+import { formatPeriod, monthIndex } from '../lib/timeline';
+
+const skills = await getCollection('skills');
+const skillById = new Map(skills.map((s) => [s.data.id, s.data]));
+
+const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
+const pieces = await Promise.all(
+  work.map(async (w) => ({ entry: w, Content: (await render(w)).Content })),
+);
+
+const roles = (await getCollection('roles'))
+  .filter((r) => r.data.kind === 'role')
+  .sort((a, b) => monthIndex(b.data.start) - monthIndex(a.data.start));
+---
+
+<Base
+  title="Work · Mikołaj Bigaj"
+  description="Backend work at YouGov and the earlier roles that led to it."
+>
+  <a class="back" href="/">← control room</a>
+
+  <h1 class="page-title">Work</h1>
+
+  {
+    pieces.map(({ entry, Content }) => (
+      <article id={entry.id} class="card">
+        <div class="meta">
+          <span class="code">{entry.data.code}</span>
+          <span>{entry.data.employer}</span>
+        </div>
+        <h2>{entry.data.title}</h2>
+        <p class="summary">{entry.data.summary}</p>
+        <ul class="tags" aria-label="Tags">
+          {entry.data.tags.map((t) => <li>{t}</li>)}
+        </ul>
+        <div class="prose"><Content /></div>
+        {entry.data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} />)}
+      </article>
+    ))
+  }
+
+  <h2 class="section-title">Earlier roles</h2>
+
+  {
+    roles.map((r) => (
+      <article id={r.id} class="card" data-role>
+        <div class="meta">
+          <span>{r.data.employer}</span>
+          <span>{formatPeriod(r.data.start, r.data.end)}</span>
+        </div>
+        <h3>{r.data.title}</h3>
+        {r.data.summary && <p class="summary">{r.data.summary}</p>}
+        <div class="chips">
+          {r.data.skills
+            .map((ref) => skillById.get(ref.id))
+            .filter((s): s is NonNullable<typeof s> => s !== undefined)
+            .map((s) => <SkillChip skill={s} href={`/skills/#skill-${s.id}`} />)}
+        </div>
+      </article>
+    ))
+  }
+</Base>
+
+<style>
+  .back {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .page-title {
+    margin: 0;
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .section-title {
+    margin: 16px 0 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .card {
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .code {
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  h2,
+  h3 {
+    margin: 0;
+    font-size: 24px;
+    line-height: 1.2;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 20px;
+  }
+  .summary {
+    margin: 0;
+    max-width: 720px;
+    color: var(--text-soft);
+  }
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .tags li {
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .prose :global(p) {
+    margin: 0 0 12px;
+    max-width: 720px;
+    color: var(--text-soft);
+  }
+  .prose :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  @media (max-width: 520px) {
+    .card {
+      padding: 20px;
+    }
+    .page-title {
+      font-size: 32px;
+    }
+  }
+</style>

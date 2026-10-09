@@ -27,9 +27,9 @@ export async function loadEvidence(): Promise<Record<string, EvidenceItem[]>> {
       .filter((r) => r.data.kind === 'role')
       .map((r) => ({
         kind: 'role' as const,
-        id: r.data.id,
+        id: r.id,
         title: `${r.data.title}, ${r.data.employer}`,
-        href: `/work/#${r.data.id}`,
+        href: `/work/#${r.id}`,
         skills: r.data.skills.map((s) => s.id),
       })),
   ];

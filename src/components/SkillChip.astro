@@ -8,29 +8,3 @@ const { skill, href } = Astro.props;
 
 <a class={`chip chip--${skill.tier}`} href={href}>{skill.name}</a>
 
-<style>
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    min-height: 44px;
-    padding: 0 12px;
-    border-radius: 4px;
-    border: 1px solid var(--chip-border);
-    font-family: var(--font-mono);
-    font-size: 13px;
-    color: var(--text-soft);
-  }
-  .chip--daily {
-    border-color: var(--accent);
-    background: var(--chip-daily);
-    color: var(--text);
-    font-weight: 600;
-  }
-  .chip--familiar {
-    border-style: dashed;
-    color: var(--text-2);
-  }
-  .chip:hover {
-    color: var(--accent);
-  }
-</style>
