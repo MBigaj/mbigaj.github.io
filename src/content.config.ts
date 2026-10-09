@@ -4,6 +4,7 @@ import { glob, file } from 'astro/loaders';
 
 const ym = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
+// Text in a figure is drawn at a fixed size inside fixed boxes, so it is capped rather than wrapped.
 const figure = z.object({
   id: z.string(),
   caption: z.string(),
@@ -11,8 +12,8 @@ const figure = z.object({
     .array(
       z.object({
         id: z.string(),
-        label: z.string(),
-        sub: z.string().optional(),
+        label: z.string().max(20, 'A figure node label can be at most 20 characters'),
+        sub: z.string().max(24, 'A figure node sub line can be at most 24 characters').optional(),
         col: z.number().int().min(0),
         row: z.number().int().min(0),
       }),
@@ -23,7 +24,7 @@ const figure = z.object({
       z.object({
         from: z.string(),
         to: z.string(),
-        label: z.string().optional(),
+        label: z.string().max(18, 'A figure edge label can be at most 18 characters').optional(),
         dashed: z.boolean().default(false),
       }),
     )

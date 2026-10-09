@@ -45,3 +45,15 @@ test('the page has a title, a back link and a stack line', async ({ page }) => {
   await expect(stack).toContainText('Django · React · PostgreSQL · clustering model');
   await expect(stack).not.toContainText('Sprint planning');
 });
+
+test('a figure can be scrolled from the keyboard and owns its arrowhead', async ({ page }) => {
+  await page.goto('/projects/dark-souls-app/');
+  const sheet = page.getByRole('group', { name: 'Request path and telemetry' });
+  await expect(sheet).toHaveClass(/bp-sheet/);
+  await expect(sheet).toHaveAttribute('tabindex', '0');
+  const marker = page.locator('figure svg marker');
+  await expect(marker).toHaveAttribute('id', 'bp-arrow-page-1-fig-01');
+  const ends = await page.locator('figure svg path.bp-edge').evaluateAll((els) => els.map((e) => e.getAttribute('marker-end')));
+  expect(ends).toEqual(Array(3).fill('url(#bp-arrow-page-1-fig-01)'));
+  expect(await page.locator('.bp-label').first().evaluate((e) => getComputedStyle(e).fontWeight)).toBe('600');
+});

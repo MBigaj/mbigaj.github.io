@@ -39,7 +39,7 @@ const roles = (await getCollection('roles'))
           {entry.data.tags.map((t) => <li>{t}</li>)}
         </ul>
         <div class="prose"><Content /></div>
-        {entry.data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} />)}
+        {entry.data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} scope={entry.id} />)}
       </article>
     ))
   }
