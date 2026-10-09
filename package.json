@@ -1,0 +1,46 @@
+{
+  "name": "mbigaj.github.io",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MBigaj/mbigaj.github.io.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/MBigaj/mbigaj.github.io/issues"
+  },
+  "homepage": "https://github.com/MBigaj/mbigaj.github.io#readme",
+  "dependencies": {
+    "@astrojs/react": "^7.0.1",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "astro": "^7.3.8",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.64.0",
+    "@types/node": "^22.20.5",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.3"
+  },
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
