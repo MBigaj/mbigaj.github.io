@@ -63,7 +63,7 @@ const projects = defineCollection({
       order: z.number().int(),
       status: z.enum(['in-progress', 'shipped']),
       skills: z.array(reference('skills')).min(1),
-      stackExtra: z.array(z.string()).default([]),
+      stack: z.array(z.string()).min(1),
       repo: z.string().url(),
       started: z.string().optional(),
       ended: z.string().optional(),

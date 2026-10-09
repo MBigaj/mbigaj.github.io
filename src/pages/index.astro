@@ -10,7 +10,6 @@ import SkillMapPanel from '../components/home/SkillMapPanel.astro';
 const now = new Date().toISOString().slice(0, 7);
 
 const skills = (await getCollection('skills')).map((s) => s.data);
-const skillName = new Map(skills.map((s) => [s.id, s.name]));
 const roles = (await getCollection('roles')).map((r) => r.data);
 
 const current = roles.find((r) => r.kind === 'role' && r.end === null);
@@ -24,7 +23,7 @@ const projects = (await getCollection('projects'))
     title: p.data.title,
     summary: p.data.summary,
     status: p.data.status,
-    stack: [...p.data.skills.map((s) => skillName.get(s.id) ?? s.id), ...p.data.stackExtra].join(' · '),
+    stack: p.data.stack.join(' · '),
   }));
 
 const work = (await getCollection('work'))

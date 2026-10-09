@@ -41,4 +41,7 @@ test('the page has a title, a back link and a stack line', async ({ page }) => {
   await expect(page.locator('main a').first()).toHaveAttribute('href', '/');
   await expect(page.locator('main')).toContainText('Started April 2024');
   await expect(page.locator('main')).toContainText('Finished February 2025');
+  const stack = page.locator('.hero-side > div', { hasText: 'STACK' });
+  await expect(stack).toContainText('Django · React · PostgreSQL · clustering model');
+  await expect(stack).not.toContainText('Sprint planning');
 });

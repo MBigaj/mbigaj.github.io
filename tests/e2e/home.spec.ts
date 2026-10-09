@@ -28,6 +28,13 @@ test('projects list three rows with statuses and case-study links', async ({ pag
   await expect(rows.nth(1)).toHaveAttribute('href', '/projects/talis/');
   await expect(rows.nth(1)).toContainText('shipped');
 });
+test('project rows print the display stack, not every skill', async ({ page }) => {
+  await page.goto('/');
+  const talis = page.locator('#projects a.project-row').nth(1);
+  await expect(talis.locator('.stack')).toHaveText('Django · React · PostgreSQL · clustering model');
+  await expect(talis).not.toContainText('Sprint planning');
+  await expect(page.locator('#projects a.project-row .stack').first()).toHaveText('FastAPI · React · MongoDB · New Relic');
+});
 test('skill map shows 24 chips linking to their evidence', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#skills a.chip')).toHaveCount(24);

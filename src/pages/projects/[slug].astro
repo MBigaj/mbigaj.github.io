@@ -9,19 +9,17 @@ import PendingSection from '../../components/PendingSection.astro';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
-  const skills = await getCollection('skills');
-  const skillName = new Map(skills.map((s) => [s.data.id, s.data.name]));
   return projects.map((project) => ({
     params: { slug: project.id },
-    props: { project, skillName },
+    props: { project },
   }));
 }
 
-const { project, skillName } = Astro.props;
+const { project } = Astro.props;
 const { data } = project;
 const { Content } = await render(project);
 
-const stack = [...data.skills.map((s) => skillName.get(s.id) ?? s.id), ...data.stackExtra].join(' · ');
+const stack = data.stack.join(' · ');
 const number = String(data.order).padStart(2, '0');
 const roadmapColumns = data.roadmap
   ? [

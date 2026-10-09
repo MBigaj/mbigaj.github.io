@@ -4,6 +4,7 @@ order: 3
 status: shipped
 summary: A neural network written by hand that reads digits you draw.
 skills: [python, numpy]
+stack: ["Python", "NumPy"]
 repo: https://github.com/MBigaj/Digit_recognition_kohonen
 ---
 

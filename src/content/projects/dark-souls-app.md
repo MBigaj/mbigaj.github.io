@@ -4,6 +4,7 @@ order: 1
 status: in-progress
 summary: "Companion web app, built as a full production-style system."
 skills: [python, fastapi, react, mongodb, docker, new-relic, git, github]
+stack: ["FastAPI", "React", "MongoDB", "New Relic"]
 repo: https://github.com/MBigaj/DarkSoulsTheBoardGameApp
 figures:
   - id: fig-01
