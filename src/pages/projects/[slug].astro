@@ -1,0 +1,308 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import Panel from '../../components/Panel.astro';
+import StatusBadge from '../../components/StatusBadge.astro';
+import BlueprintFigure from '../../components/BlueprintFigure.astro';
+import PendingSection from '../../components/PendingSection.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  const skills = await getCollection('skills');
+  const skillName = new Map(skills.map((s) => [s.data.id, s.data.name]));
+  return projects.map((project) => ({
+    params: { slug: project.id },
+    props: { project, skillName },
+  }));
+}
+
+const { project, skillName } = Astro.props;
+const { data } = project;
+const { Content } = await render(project);
+
+const stack = [...data.skills.map((s) => skillName.get(s.id) ?? s.id), ...data.stackExtra].join(' · ');
+const number = String(data.order).padStart(2, '0');
+const hasBody = Boolean(project.body?.trim());
+---
+
+<Base title={`${data.title} · Mikołaj Bigaj`} description={data.summary}>
+  <a class="back" href="/">← control room</a>
+
+  <section class="hero">
+    <div class="hero-main">
+      <div class="hero-meta">
+        <span class="kicker">PROJECT {number}</span>
+        <StatusBadge status={data.status} />
+      </div>
+      <h1>{data.title}</h1>
+      <p class="summary">{data.summary}</p>
+    </div>
+    <div class="hero-side">
+      <div>
+        <div class="field-label">STACK</div>
+        <div>{stack}</div>
+      </div>
+      {data.started && (
+        <div>
+          <div class="field-label">DATES</div>
+          <div>Started {data.started}</div>
+          {data.ended && <div>Finished {data.ended}</div>}
+        </div>
+      )}
+      <a class="repo" href={data.repo}>View the repo →</a>
+    </div>
+  </section>
+
+  {hasBody ? (
+    <Panel label="PROBLEM">
+      <div class="prose"><Content /></div>
+    </Panel>
+  ) : (
+    <PendingSection name="PROBLEM" />
+  )}
+
+  {data.figures.length > 0 ? (
+    <Panel label="ARCHITECTURE">
+      {data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} />)}
+    </Panel>
+  ) : (
+    <PendingSection name="ARCHITECTURE" />
+  )}
+
+  {data.scaling ? (
+    <Panel label="SCALING">
+      <div class="cols">
+        <div><div class="field-label">HOW IT GROWS</div><p>{data.scaling.growth}</p></div>
+        <div><div class="field-label">FIRST BOTTLENECK</div><p>{data.scaling.bottleneck}</p></div>
+        <div><div class="field-label">AT TEN TIMES THE LOAD</div><p>{data.scaling.tenX}</p></div>
+      </div>
+    </Panel>
+  ) : (
+    <PendingSection name="SCALING" />
+  )}
+
+  {data.team ? (
+    <Panel label="TEAM AND DELIVERY">
+      <div class="cols">
+        <div>
+          <div class="field-label">ROLE</div>
+          <p>{data.team.role}</p>
+        </div>
+        <div>
+          <div class="field-label">Team of {data.team.members.length + 1}</div>
+          <ul>
+            {data.team.members.map((m) => <li>{m}</li>)}
+          </ul>
+        </div>
+        <div>
+          <div class="field-label">PROCESS</div>
+          <p>{data.team.process}</p>
+        </div>
+      </div>
+    </Panel>
+  ) : (
+    <PendingSection name="TEAM AND DELIVERY" />
+  )}
+
+  {data.screens.length > 0 ? (
+    <Panel label="SCREENS">
+      <div class="screens">
+        {data.screens.map((s) => (
+          <figure>
+            <Image src={s.src} alt={s.alt} widths={[400, 800]} sizes="(max-width: 700px) 100vw, 420px" />
+            <figcaption>{s.caption}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </Panel>
+  ) : (
+    <PendingSection name="SCREENS" />
+  )}
+
+  {data.roadmap ? (
+    <Panel label="ROADMAP">
+      <div class="cols">
+        <div>
+          <div class="road road--done"><span class="marker" aria-hidden="true"></span>done</div>
+          <ul>{data.roadmap.done.map((t) => <li>{t}</li>)}</ul>
+        </div>
+        <div>
+          <div class="road road--progress"><span class="marker" aria-hidden="true"></span>in progress</div>
+          <ul>{data.roadmap.inProgress.map((t) => <li>{t}</li>)}</ul>
+        </div>
+        <div>
+          <div class="road road--planned"><span class="marker" aria-hidden="true"></span>planned</div>
+          <ul>{data.roadmap.planned.map((t) => <li>{t}</li>)}</ul>
+        </div>
+      </div>
+    </Panel>
+  ) : (
+    <PendingSection name="ROADMAP" />
+  )}
+</Base>
+
+<style>
+  .back {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .hero {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 48px;
+  }
+  .hero-main {
+    flex: 3 1 420px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .hero-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .kicker {
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+  .summary {
+    margin: 0;
+    max-width: 680px;
+    font-size: 18px;
+    color: #d5dfe8;
+  }
+  .hero-side {
+    flex: 1 1 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-size: 15px;
+  }
+  .field-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .repo {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid #3a4b5c;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .prose :global(p) {
+    margin: 0 0 12px;
+    max-width: 720px;
+    color: #d5dfe8;
+  }
+  .prose :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .cols {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 32px;
+  }
+  .cols > div {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+  .cols p {
+    margin: 4px 0 0;
+  }
+  .cols ul {
+    margin: 4px 0 0;
+    padding-left: 20px;
+  }
+  .road {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .road .marker {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+  }
+  .road--done {
+    color: var(--st-shipped);
+  }
+  .road--done .marker {
+    background: var(--st-shipped);
+  }
+  .road--progress {
+    color: var(--st-progress);
+  }
+  .road--progress .marker {
+    background: var(--st-progress);
+    border-radius: 50%;
+  }
+  .road--planned {
+    color: var(--text-2);
+  }
+  .road--planned .marker {
+    border: 1px solid var(--text-2);
+  }
+  .screens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .screens figure {
+    flex: 1 1 300px;
+    min-width: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .screens img {
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .screens figcaption {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  @media (max-width: 520px) {
+    .hero {
+      padding: 20px;
+    }
+    h1 {
+      font-size: 32px;
+    }
+  }
+</style>

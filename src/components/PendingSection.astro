@@ -1,0 +1,28 @@
+---
+interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+---
+
+{
+  import.meta.env.DEV && (
+    <div class="pending">Content pending: {name}</div>
+  )
+}
+
+<style>
+  .pending {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    padding: 16px;
+    text-align: center;
+    border: 1px dashed var(--chip-border);
+    border-radius: var(--radius);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+</style>
