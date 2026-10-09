@@ -1,0 +1,20 @@
+:root {
+  --ground: #0b1016;
+  --panel: #121a23;
+  --border: #22303d;
+  --text: #e8eef4;
+  --text-2: #a3b3c2;
+  --muted: #8a9bab;
+  --accent: #6cb6ff;
+  --st-progress: #f2b54a;
+  --st-shipped: #5fd39a;
+  --bp-sheet: #0f2c4a;
+  --bp-grid: #17406a;
+  --bp-box: #10365a;
+  --bp-line: #dcebfa;
+  --chip-border: #4a5d70;
+  --chip-daily: #16324a;
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --radius: 6px;
+}
