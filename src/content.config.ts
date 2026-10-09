@@ -14,7 +14,7 @@ const figure = z.object({
       z.object({
         id: z.string(),
         label: z.string().max(20, 'A figure node label can be at most 20 characters'),
-        sub: z.string().max(24, 'A figure node sub line can be at most 24 characters').optional(),
+        sub: z.string().max(22, 'A figure node sub line can be at most 22 characters').optional(),
         col: z.number().int().min(0),
         row: z.number().int().min(0),
       }),

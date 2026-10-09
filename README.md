@@ -95,7 +95,7 @@ The layout is deliberately simple, and the build refuses a figure it would draw 
 - One node per grid cell, and every node id is unique within its figure.
 - An edge runs straight between two nodes in the same row or column. Otherwise it bends once: it leaves the side of the `from` node, runs along that node's row, then turns into the top or bottom of the `to` node.
 - An edge may not start and end at the same node, pass through any other node, or run along the same stretch as another edge. That rules out two edges between the same pair of nodes, one in each direction. Edges may cross.
-- Text is not wrapped: a node `label` is at most 20 characters, a node `sub` at most 24 and an edge `label` at most 18.
+- Text is not wrapped: a node `label` is at most 20 characters, a node `sub` at most 22 and an edge `label` at most 18.
 
 When a figure is refused, the error names the figure and the nodes involved; move a node to another cell or drop an edge. From `src/content/projects/dark-souls-app.md`:
 
