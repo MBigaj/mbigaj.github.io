@@ -1,0 +1,146 @@
+[
+  {
+    "id": "python",
+    "name": "Python",
+    "area": "languages",
+    "tier": "daily"
+  },
+  {
+    "id": "fastapi",
+    "name": "FastAPI",
+    "area": "languages",
+    "tier": "solid"
+  },
+  {
+    "id": "django",
+    "name": "Django",
+    "area": "languages",
+    "tier": "solid"
+  },
+  {
+    "id": "react",
+    "name": "React",
+    "area": "languages",
+    "tier": "solid"
+  },
+  {
+    "id": "go",
+    "name": "Go",
+    "area": "languages",
+    "tier": "familiar"
+  },
+  {
+    "id": "vue",
+    "name": "Vue",
+    "area": "languages",
+    "tier": "familiar"
+  },
+  {
+    "id": "postgresql",
+    "name": "PostgreSQL",
+    "area": "data",
+    "tier": "daily"
+  },
+  {
+    "id": "mongodb",
+    "name": "MongoDB",
+    "area": "data",
+    "tier": "daily"
+  },
+  {
+    "id": "redis",
+    "name": "Redis",
+    "area": "data",
+    "tier": "solid"
+  },
+  {
+    "id": "rabbitmq",
+    "name": "RabbitMQ",
+    "area": "data",
+    "tier": "solid"
+  },
+  {
+    "id": "numpy",
+    "name": "NumPy",
+    "area": "data",
+    "tier": "solid"
+  },
+  {
+    "id": "elasticsearch",
+    "name": "Elasticsearch",
+    "area": "data",
+    "tier": "familiar"
+  },
+  {
+    "id": "kubernetes",
+    "name": "Kubernetes",
+    "area": "infrastructure",
+    "tier": "daily"
+  },
+  {
+    "id": "docker",
+    "name": "Docker",
+    "area": "infrastructure",
+    "tier": "daily"
+  },
+  {
+    "id": "git",
+    "name": "Git",
+    "area": "infrastructure",
+    "tier": "daily"
+  },
+  {
+    "id": "gitlab",
+    "name": "GitLab",
+    "area": "infrastructure",
+    "tier": "daily"
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "area": "infrastructure",
+    "tier": "daily"
+  },
+  {
+    "id": "ci-cd",
+    "name": "CI/CD",
+    "area": "infrastructure",
+    "tier": "solid"
+  },
+  {
+    "id": "aws",
+    "name": "AWS",
+    "area": "infrastructure",
+    "tier": "familiar"
+  },
+  {
+    "id": "new-relic",
+    "name": "New Relic",
+    "area": "observability",
+    "tier": "solid"
+  },
+  {
+    "id": "pytest",
+    "name": "pytest",
+    "area": "observability",
+    "tier": "solid"
+  },
+  {
+    "id": "agile-kanban",
+    "name": "Agile and Kanban",
+    "area": "delivery",
+    "tier": "daily"
+  },
+  {
+    "id": "team-leadership",
+    "name": "Team leadership",
+    "area": "delivery",
+    "tier": "solid"
+  },
+  {
+    "id": "sprint-planning",
+    "name": "Sprint planning",
+    "area": "delivery",
+    "tier": "solid"
+  }
+]
