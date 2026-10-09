@@ -23,6 +23,13 @@ const { Content } = await render(project);
 
 const stack = [...data.skills.map((s) => skillName.get(s.id) ?? s.id), ...data.stackExtra].join(' · ');
 const number = String(data.order).padStart(2, '0');
+const roadmapColumns = data.roadmap
+  ? [
+      { cls: 'done', label: 'done', items: data.roadmap.done },
+      { cls: 'progress', label: 'in progress', items: data.roadmap.inProgress },
+      { cls: 'planned', label: 'planned', items: data.roadmap.planned },
+    ].filter((c) => c.items.length > 0)
+  : [];
 const hasBody = Boolean(project.body?.trim());
 ---
 
@@ -123,18 +130,12 @@ const hasBody = Boolean(project.body?.trim());
   {data.roadmap ? (
     <Panel label="ROADMAP">
       <div class="cols">
-        <div>
-          <div class="road road--done"><span class="marker" aria-hidden="true"></span>done</div>
-          <ul>{data.roadmap.done.map((t) => <li>{t}</li>)}</ul>
-        </div>
-        <div>
-          <div class="road road--progress"><span class="marker" aria-hidden="true"></span>in progress</div>
-          <ul>{data.roadmap.inProgress.map((t) => <li>{t}</li>)}</ul>
-        </div>
-        <div>
-          <div class="road road--planned"><span class="marker" aria-hidden="true"></span>planned</div>
-          <ul>{data.roadmap.planned.map((t) => <li>{t}</li>)}</ul>
-        </div>
+        {roadmapColumns.map((c) => (
+          <div>
+            <div class={`road road--${c.cls}`}><span class="marker" aria-hidden="true"></span>{c.label}</div>
+            <ul>{c.items.map((t) => <li>{t}</li>)}</ul>
+          </div>
+        ))}
       </div>
     </Panel>
   ) : (
@@ -191,7 +192,7 @@ const hasBody = Boolean(project.body?.trim());
     margin: 0;
     max-width: 680px;
     font-size: 18px;
-    color: #d5dfe8;
+    color: var(--text-soft);
   }
   .hero-side {
     flex: 1 1 260px;
@@ -213,7 +214,7 @@ const hasBody = Boolean(project.body?.trim());
     align-self: flex-start;
     min-height: 44px;
     padding: 0 16px;
-    border: 1px solid #3a4b5c;
+    border: 1px solid var(--btn-border);
     border-radius: 4px;
     font-family: var(--font-mono);
     font-size: 14px;
@@ -221,7 +222,7 @@ const hasBody = Boolean(project.body?.trim());
   .prose :global(p) {
     margin: 0 0 12px;
     max-width: 720px;
-    color: #d5dfe8;
+    color: var(--text-soft);
   }
   .prose :global(p:last-child) {
     margin-bottom: 0;

@@ -25,9 +25,13 @@ test('sections without content are absent from the built site', async ({ page })
   await expect(main).toContainText('PROBLEM');
 });
 
-test('a wide figure scrolls inside its panel, not the page', async ({ page }) => {
+test('a wide figure scrolls inside its panel, not the page', async ({ page }, testInfo) => {
   await page.goto('/projects/dark-souls-app/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  if (testInfo.project.name === 'phone') {
+    const sheet = page.locator('figure .bp-sheet');
+    expect(await sheet.evaluate((el) => el.scrollWidth > el.clientWidth)).toBe(true);
+  }
 });
 
 test('the page has a title, a back link and a stack line', async ({ page }) => {
