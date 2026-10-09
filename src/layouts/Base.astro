@@ -16,6 +16,13 @@ interface Props {
 
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+const here = Astro.url.pathname.replace(/\/$/, '');
+const nav = [
+  { label: 'Projects', href: '/#projects' },
+  { label: 'Work', href: '/work/' },
+  { label: 'Skills', href: '/skills/' },
+  { label: 'CV', href: SITE.cv },
+];
 ---
 
 <html lang="en">
@@ -32,6 +39,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     <meta property="og:url" content={canonical} />
   </head>
   <body>
+    <a class="skip" href="#main">Skip to content</a>
     <div class="shell">
       <header class="topbar">
         <a class="brand" href="/">
@@ -39,13 +47,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           <span>mikołaj bigaj / portfolio</span>
         </a>
         <nav aria-label="Primary">
-          <a href="/#projects">Projects</a>
-          <a href="/work/">Work</a>
-          <a href="/skills/">Skills</a>
-          <a href={SITE.cv}>CV</a>
+          {
+            nav.map((item) => (
+              <a href={item.href} aria-current={item.href.replace(/\/$/, '') === here ? 'page' : undefined}>
+                {item.label}
+              </a>
+            ))
+          }
         </nav>
       </header>
-      <main>
+      <main id="main">
         <slot />
       </main>
       <footer class="footer">
@@ -57,6 +68,25 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 </html>
 
 <style>
+  .skip {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    background: var(--panel);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    transform: translateY(-200%);
+  }
+  .skip:focus {
+    transform: none;
+  }
   .shell {
     max-width: 1360px;
     margin: 0 auto;

@@ -46,6 +46,14 @@ test('the page has a title, a back link and a stack line', async ({ page }) => {
   await expect(stack).not.toContainText('Sprint planning');
 });
 
+test('section labels are level-2 headings under the project title', async ({ page }) => {
+  await page.goto('/projects/dark-souls-app/');
+  const h2 = await page.getByRole('heading', { level: 2 }).allTextContents();
+  expect(h2).toContain('PROBLEM');
+  expect(h2).toContain('ARCHITECTURE');
+  await expect(page.getByRole('region', { name: 'ARCHITECTURE' })).toContainText('Fig. 01');
+});
+
 test('a figure can be scrolled from the keyboard and owns its arrowhead', async ({ page }) => {
   await page.goto('/projects/dark-souls-app/');
   const sheet = page.getByRole('group', { name: 'Request path and telemetry' });

@@ -35,6 +35,19 @@ test('project rows print the display stack, not every skill', async ({ page }) =
   await expect(talis).not.toContainText('Sprint planning');
   await expect(page.locator('#projects a.project-row .stack').first()).toHaveText('FastAPI · React · MongoDB · New Relic');
 });
+test('panel labels are level-2 headings that name their sections', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 2 })).toHaveText(
+    ['01 / IDENTITY', '02 / TIMELINE', '03 / PROJECTS', '04 / PRODUCTION WORK', '05 / SKILL MAP']);
+  await expect(page.getByRole('region', { name: '03 / PROJECTS' })).toHaveAttribute('id', 'projects');
+  await expect(page.locator('#skills').getByRole('heading', { level: 3 })).toHaveText([
+    'Languages and frameworks',
+    'Data and messaging',
+    'Infrastructure and delivery',
+    'Observability and testing',
+    'Delivery and leadership',
+  ]);
+});
 test('skill map shows 24 chips linking to their evidence', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#skills a.chip')).toHaveCount(24);

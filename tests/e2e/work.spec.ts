@@ -10,6 +10,13 @@ test('work page lists the three YouGov pieces and the earlier roles', async ({ p
   await expect(page.locator('main')).not.toContainText(/php|yii/i);
 });
 
+test('the roles list is headed "Roles", since it starts with the current job', async ({ page }) => {
+  await page.goto('/work/');
+  await expect(page.getByRole('heading', { level: 2, name: 'Roles', exact: true })).toBeVisible();
+  await expect(page.locator('main')).not.toContainText('Earlier roles');
+  await expect(page.locator('article[data-role]').first()).toHaveAttribute('id', 'yougov-associate');
+});
+
 test('earlier roles are newest first and link their skills', async ({ page }) => {
   await page.goto('/work/');
   const ids = await page.locator('article[data-role]').evaluateAll((els) => els.map((e) => e.id));
