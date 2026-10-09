@@ -1,0 +1,124 @@
+---
+import { layoutFigure, type Figure } from '../lib/figure';
+
+interface Props {
+  figure: Figure;
+  number: number;
+}
+
+const { figure, number } = Astro.props;
+const laid = layoutFigure(figure);
+const markerId = `bp-arrow-${figure.id}`;
+const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'} ${x} ${y}`).join(' ');
+---
+
+<figure class="bp">
+  <div class="bp-sheet">
+    <svg
+      role="img"
+      width={laid.width}
+      height={laid.height}
+      viewBox={`0 0 ${laid.width} ${laid.height}`}
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>{figure.caption}</title>
+      <defs>
+        <marker
+          id={markerId}
+          markerUnits="userSpaceOnUse"
+          markerWidth="10"
+          markerHeight="10"
+          refX="9"
+          refY="5"
+          orient="auto"
+        >
+          <path d="M0 0 L10 5 L0 10 Z" class="bp-head"></path>
+        </marker>
+      </defs>
+      {laid.edges.map((e) => (
+        <path
+          d={path(e.points)}
+          class:list={['bp-edge', { dashed: e.dashed }]}
+          marker-end={`url(#${markerId})`}
+        ></path>
+      ))}
+      {laid.nodes.map((n) => (
+        <g>
+          <rect x={n.x} y={n.y} width={n.w} height={n.h} class="bp-box"></rect>
+          <text x={n.x + n.w / 2} y={n.y + n.h / 2 + (n.sub ? -4 : 5)} text-anchor="middle" class="bp-label">{n.label}</text>
+          {n.sub && (
+            <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 20} text-anchor="middle" class="bp-sub">{n.sub}</text>
+          )}
+        </g>
+      ))}
+      {laid.edges.map((e) => {
+        if (!e.label || !e.labelAt) return null;
+        const horizontal = e.points[0][1] === e.points[1][1];
+        return (
+          <text x={e.labelAt[0]} y={e.labelAt[1]} text-anchor={horizontal ? 'middle' : 'start'} class="bp-edge-label">{e.label}</text>
+        );
+      })}
+    </svg>
+  </div>
+  <figcaption>Fig. 0{number} · {figure.caption}</figcaption>
+</figure>
+
+<style>
+  .bp {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .bp-sheet {
+    overflow-x: auto;
+    border-radius: calc(var(--radius) - 2px);
+    background-color: var(--bp-sheet);
+    background-image:
+      linear-gradient(var(--bp-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bp-grid) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+  svg {
+    display: block;
+    margin: 0 auto;
+    max-width: none;
+    font-family: var(--font-mono);
+  }
+  .bp-box {
+    fill: var(--bp-box);
+    stroke: var(--bp-line);
+    stroke-width: 2;
+  }
+  .bp-edge {
+    fill: none;
+    stroke: var(--bp-line);
+    stroke-width: 2;
+    stroke-linejoin: round;
+  }
+  .bp-edge.dashed {
+    stroke-dasharray: 6 6;
+  }
+  .bp-head {
+    fill: var(--bp-line);
+    stroke: none;
+  }
+  .bp-label {
+    font-size: 15px;
+    font-weight: 700;
+    fill: #fff;
+  }
+  .bp-sub {
+    font-size: 15px;
+    fill: #fff;
+  }
+  .bp-edge-label {
+    font-size: 13px;
+    fill: #c9e1f7;
+  }
+  figcaption {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+</style>
