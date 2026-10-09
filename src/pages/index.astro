@@ -1,10 +1,52 @@
 ---
+import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import IdentityPanel from '../components/home/IdentityPanel.astro';
+import TimelinePanel from '../components/home/TimelinePanel.astro';
+import ProjectsPanel from '../components/home/ProjectsPanel.astro';
+import WorkPanel from '../components/home/WorkPanel.astro';
+import SkillMapPanel from '../components/home/SkillMapPanel.astro';
+
+const now = new Date().toISOString().slice(0, 7);
+
+const skills = (await getCollection('skills')).map((s) => s.data);
+const skillName = new Map(skills.map((s) => [s.id, s.name]));
+const roles = (await getCollection('roles')).map((r) => r.data);
+
+const current = roles.find((r) => r.kind === 'role' && r.end === null);
+const education = roles.find((r) => r.kind === 'education');
+const since = String(Math.min(...roles.filter((r) => r.kind === 'role').map((r) => Number(r.start.slice(0, 4)))));
+
+const projects = (await getCollection('projects'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((p) => ({
+    id: p.id,
+    title: p.data.title,
+    summary: p.data.summary,
+    status: p.data.status,
+    stack: [...p.data.skills.map((s) => skillName.get(s.id) ?? s.id), ...p.data.stackExtra].join(' · '),
+  }));
+
+const work = (await getCollection('work'))
+  .sort((a, b) => a.data.order - b.data.order)
+  .map((w) => w.data);
 ---
 
 <Base
   title="Mikołaj Bigaj · Backend engineer"
   description="Portfolio of Mikołaj Bigaj, a Python backend engineer building APIs, data stores, CI/CD pipelines and Kubernetes deployments."
 >
-  <h1>Mikołaj Bigaj</h1>
+  <div class="pair">
+    <IdentityPanel
+      now={`${current?.title}, ${current?.employer}`}
+      since={since}
+      degree={`${education?.title}, ${education?.end?.slice(0, 4)}`}
+    />
+    <TimelinePanel items={roles} {now} />
+  </div>
+  <div class="pair">
+    <ProjectsPanel projects={projects} />
+    <WorkPanel entries={work} />
+  </div>
+  <SkillMapPanel skills={skills} />
 </Base>

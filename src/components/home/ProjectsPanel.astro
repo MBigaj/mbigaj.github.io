@@ -1,0 +1,72 @@
+---
+import Panel from '../Panel.astro';
+import StatusBadge from '../StatusBadge.astro';
+
+interface Project {
+  id: string;
+  title: string;
+  summary: string;
+  stack: string;
+  status: 'in-progress' | 'shipped';
+}
+interface Props {
+  projects: Project[];
+}
+const { projects } = Astro.props;
+---
+
+<Panel label="03 / PROJECTS" id="projects">
+  {
+    projects.map((p) => (
+      <a class="project-row" href={`/projects/${p.id}/`}>
+        <span class="main">
+          <span class="title">{p.title}</span>
+          <span class="summary">{p.summary}</span>
+          <span class="stack">{p.stack}</span>
+        </span>
+        <StatusBadge status={p.status} />
+        <span class="go">case study →</span>
+      </a>
+    ))
+  }
+</Panel>
+
+<style>
+  .project-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 20px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .project-row:last-child {
+    border-bottom: 0;
+    padding-bottom: 4px;
+  }
+  .main {
+    flex: 1 1 280px;
+    min-width: 0;
+  }
+  .main > span {
+    display: block;
+  }
+  .title {
+    font-size: 19px;
+    font-weight: 600;
+  }
+  .summary {
+    font-size: 15px;
+    color: var(--text-2);
+  }
+  .stack {
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .go {
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+</style>

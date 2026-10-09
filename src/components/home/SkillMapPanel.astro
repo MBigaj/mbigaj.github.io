@@ -1,0 +1,111 @@
+---
+import Panel from '../Panel.astro';
+import SkillChip from '../SkillChip.astro';
+import { AREAS, TIERS } from '../../lib/site';
+
+type Tier = (typeof TIERS)[number];
+interface Skill {
+  id: string;
+  name: string;
+  area: string;
+  tier: Tier;
+}
+interface Props {
+  skills: Skill[];
+}
+const { skills } = Astro.props;
+const groups = AREAS.map((a) => ({
+  ...a,
+  skills: skills
+    .filter((s) => s.area === a.id)
+    .sort((x, y) => TIERS.indexOf(x.tier) - TIERS.indexOf(y.tier)),
+})).filter((g) => g.skills.length > 0);
+---
+
+<Panel label="05 / SKILL MAP" id="skills">
+  <div class="legend" aria-label="Legend">
+    {TIERS.map((t) => <span class="key"><span class={`swatch swatch--${t}`} aria-hidden="true"></span>{t}</span>)}
+  </div>
+  <div class="groups">
+    {
+      groups.map((g) => (
+        <div class="group">
+          <h2>{g.label}</h2>
+          <div class="chips">
+            {g.skills.map((s) => <SkillChip skill={s} href={`/skills/#skill-${s.id}`} />)}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+  <p class="hint">Pick a skill to see the projects and roles where it was used.</p>
+</Panel>
+
+<style>
+  .legend {
+    position: absolute;
+    top: 28px;
+    right: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  @media (max-width: 700px) {
+    .legend {
+      position: static;
+    }
+  }
+  .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .swatch {
+    display: inline-block;
+    width: 18px;
+    height: 12px;
+    box-sizing: border-box;
+    border: 1px solid var(--chip-border);
+    border-radius: 2px;
+  }
+  .swatch--daily {
+    border-color: var(--accent);
+    background: var(--chip-daily);
+  }
+  .swatch--familiar {
+    border-style: dashed;
+  }
+  .groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px 40px;
+    margin-top: 6px;
+  }
+  .group {
+    flex: 1 1 220px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  h2 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-2);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .hint {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-2);
+  }
+</style>

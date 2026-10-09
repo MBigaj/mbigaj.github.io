@@ -1,0 +1,39 @@
+---
+interface Props {
+  status: 'in-progress' | 'shipped';
+}
+const { status } = Astro.props;
+const text = status === 'in-progress' ? 'in progress' : 'shipped';
+---
+
+<span class={`badge badge--${status}`}>
+  <span class="marker" aria-hidden="true"></span>{text}
+</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+  .marker {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+  }
+  .badge--in-progress {
+    color: var(--st-progress);
+  }
+  .badge--in-progress .marker {
+    background: var(--st-progress);
+    border-radius: 50%;
+  }
+  .badge--shipped {
+    color: var(--st-shipped);
+  }
+  .badge--shipped .marker {
+    background: var(--st-shipped);
+  }
+</style>

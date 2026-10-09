@@ -1,0 +1,100 @@
+---
+import Panel from '../Panel.astro';
+import { SITE } from '../../lib/site';
+
+interface Props {
+  now: string;
+  since: string;
+  degree: string;
+}
+const { now, since, degree } = Astro.props;
+const links = [
+  { label: 'GitHub', href: SITE.github },
+  { label: 'LinkedIn', href: SITE.linkedin },
+  { label: 'Email', href: `mailto:${SITE.email}` },
+];
+---
+
+<Panel label="01 / IDENTITY" id="identity">
+  <div>
+    <h1>{SITE.name}</h1>
+    <div class="tagline">{SITE.tagline}</div>
+  </div>
+  <p class="pitch">{SITE.pitch}</p>
+  <div class="facts">
+    <div><div class="fact-label">NOW</div><div class="fact-value">{now}</div></div>
+    <div><div class="fact-label">IN ENGINEERING SINCE</div><div class="fact-value">{since}</div></div>
+    <div><div class="fact-label">DEGREE</div><div class="fact-value">{degree}</div></div>
+  </div>
+  <div class="identity-links">
+    {links.map((l) => <a class="ghost" href={l.href}>{l.label}</a>)}
+    <a class="solid" href={SITE.cv}>Download CV</a>
+  </div>
+</Panel>
+
+<style>
+  h1 {
+    margin: 0;
+    font-size: clamp(38px, 8vw, 60px);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+  .tagline {
+    margin-top: 10px;
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-2);
+  }
+  .pitch {
+    margin: 0;
+    max-width: 620px;
+    font-size: 19px;
+    line-height: 1.55;
+    color: #d5dfe8;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 40px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .fact-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .fact-value {
+    font-size: 15px;
+  }
+  .identity-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .identity-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 4px;
+  }
+  .ghost {
+    border: 1px solid #3a4b5c;
+  }
+  .solid {
+    background: var(--text);
+    color: var(--ground);
+    font-weight: 600;
+  }
+  .solid:hover {
+    color: var(--ground);
+    background: var(--accent);
+  }
+</style>
