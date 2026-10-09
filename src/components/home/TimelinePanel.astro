@@ -1,69 +1,27 @@
 ---
 import Panel from '../Panel.astro';
 import { SITE } from '../../lib/site';
-import { timelineAxis, barGeometry, formatPeriod, monthIndex } from '../../lib/timeline';
+import {
+  barGeometry,
+  buildTimelineRows,
+  formatPeriod,
+  timelineAxis,
+  type TimelineRole,
+} from '../../lib/timeline';
 
-interface Item {
-  kind: 'role' | 'education';
-  employer: string;
-  title: string;
-  start: string;
-  end: string | null;
-}
 interface Props {
-  items: Item[];
+  items: TimelineRole[];
   now: string;
 }
 const { items, now } = Astro.props;
 const axis = timelineAxis(now);
-
-/** Drop the words shared at the end of every title from all but the last. */
-function joinTitles(titles: string[]): string {
-  if (titles.length === 1) return titles[0];
-  const words = titles.map((t) => t.split(' '));
-  let shared = 0;
-  const min = Math.min(...words.map((w) => w.length));
-  while (
-    shared < min - 1 &&
-    words.every((w) => w[w.length - 1 - shared] === words[0][words[0].length - 1 - shared])
-  ) {
-    shared++;
-  }
-  // Only trim when it leaves every earlier title a distinct, non-empty prefix.
-  const trimmed = words.map((w, i) => (i < words.length - 1 ? w.slice(0, w.length - shared).join(' ') : titles[i]));
-  const ok = shared > 0 && new Set(trimmed).size === trimmed.length;
-  return (ok ? trimmed : titles).join(', then ');
-}
-
-const sorted = [...items].sort((a, b) => monthIndex(a.start) - monthIndex(b.start));
-const rows: { label: string; start: string; end: string | null; education: boolean }[] = [];
-for (const item of sorted) {
-  const last = rows[rows.length - 1] as (typeof rows)[number] & { titles?: string[]; employer?: string };
-  if (item.kind === 'role' && last && !last.education && last.employer === item.employer) {
-    last.titles!.push(item.title);
-    last.end = item.end;
-  } else {
-    rows.push({
-      label: '',
-      start: item.start,
-      end: item.end,
-      education: item.kind === 'education',
-      titles: [item.title],
-      employer: item.employer,
-    } as never);
-  }
-}
-const view = rows
-  .map((r) => {
-    const x = r as typeof r & { titles: string[]; employer: string };
-    return {
-      education: x.education,
-      label: `${x.employer} · ${joinTitles(x.titles)}`,
-      period: formatPeriod(x.start, x.end),
-      ...barGeometry(x.start, x.end, axis, now),
-    };
-  })
-  .sort((a, b) => Number(a.education) - Number(b.education) || b.leftPct - a.leftPct);
+const view = buildTimelineRows(items).map((r) => ({
+  key: r.key,
+  education: r.kind === 'education',
+  label: r.label,
+  period: formatPeriod(r.start, r.end),
+  ...barGeometry(r.start, r.end, axis, now),
+}));
 ---
 
 <Panel label="02 / TIMELINE" id="timeline">
@@ -72,7 +30,7 @@ const view = rows
   </div>
   {
     view.map((r) => (
-      <div class="row">
+      <div class="row" data-row={r.key}>
         <div class:list={['row-head', { dim: r.education }]}>
           <span>{r.label}</span>
           <span class="period">{r.period}</span>
@@ -134,7 +92,7 @@ const view = rows
   }
   .bar--edu {
     background: none;
-    border: 1px dashed #6b7e90;
+    border: 1px dashed var(--edu-border);
   }
   .note {
     margin: 0;
