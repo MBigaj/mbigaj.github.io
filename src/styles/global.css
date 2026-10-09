@@ -56,7 +56,37 @@ a:hover {
   flex: 5 1 360px;
 }
 
-/* Links in rendered Markdown bodies on project and work pages */
+/* Page furniture shared by the project, work, skills and 404 pages */
+.back {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+.page-title {
+  margin: 0;
+  font-size: 44px;
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+@media (max-width: 520px) {
+  .page-title {
+    font-size: 32px;
+  }
+}
+
+/* Rendered Markdown bodies on project and work pages */
+.prose p {
+  margin: 0 0 12px;
+  max-width: 720px;
+  color: var(--text-soft);
+}
+.prose p:last-child {
+  margin-bottom: 0;
+}
 /*
  * A link in running text gets a tap target of at least 44 px from padding that the negative
  * margin cancels sideways, so no word moves. The focus ring is pulled in by almost as much,

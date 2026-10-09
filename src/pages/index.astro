@@ -6,6 +6,7 @@ import TimelinePanel from '../components/home/TimelinePanel.astro';
 import ProjectsPanel from '../components/home/ProjectsPanel.astro';
 import WorkPanel from '../components/home/WorkPanel.astro';
 import SkillMapPanel from '../components/home/SkillMapPanel.astro';
+import { SITE } from '../lib/site';
 
 const now = new Date().toISOString().slice(0, 7);
 
@@ -39,7 +40,7 @@ const work = (await getCollection('work'))
 ---
 
 <Base
-  title="Mikołaj Bigaj · Backend engineer"
+  title={`${SITE.name} · ${SITE.role}`}
   description="Portfolio of Mikołaj Bigaj, a Python backend engineer building APIs, data stores, CI/CD pipelines and Kubernetes deployments."
 >
   <div class="pair">

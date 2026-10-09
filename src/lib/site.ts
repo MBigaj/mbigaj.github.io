@@ -19,4 +19,7 @@ export const AREAS = [
   { id: 'delivery', label: 'Delivery and leadership' },
 ] as const;
 
+/** The one list of skill areas: the content schema takes its allowed ids from here. */
+export const AREA_IDS = AREAS.map((a) => a.id);
+
 export const TIERS = ['daily', 'solid', 'familiar'] as const;

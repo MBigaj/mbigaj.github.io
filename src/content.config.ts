@@ -1,6 +1,7 @@
 import { defineCollection, reference } from 'astro:content';
 import { z } from 'astro/zod';
 import { glob, file } from 'astro/loaders';
+import { AREA_IDS, TIERS } from './lib/site';
 
 const ym = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
@@ -36,8 +37,8 @@ const skills = defineCollection({
   schema: z.object({
     id: z.string(),
     name: z.string(),
-    area: z.enum(['languages', 'data', 'infrastructure', 'observability', 'delivery']),
-    tier: z.enum(['daily', 'solid', 'familiar']),
+    area: z.enum(AREA_IDS),
+    tier: z.enum(TIERS),
   }),
 });
 

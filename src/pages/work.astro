@@ -4,6 +4,7 @@ import Base from '../layouts/Base.astro';
 import SkillChip from '../components/SkillChip.astro';
 import BlueprintFigure from '../components/BlueprintFigure.astro';
 import { formatPeriod, monthIndex } from '../lib/timeline';
+import { SITE } from '../lib/site';
 
 const skills = await getCollection('skills');
 const skillById = new Map(skills.map((s) => [s.data.id, s.data]));
@@ -28,7 +29,7 @@ const roles = (await getCollection('roles'))
 ---
 
 <Base
-  title="Work · Mikołaj Bigaj"
+  title={`Work · ${SITE.name}`}
   description="Backend work at YouGov and the earlier roles that led to it."
 >
   <a class="back" href="/">← control room</a>
@@ -76,21 +77,6 @@ const roles = (await getCollection('roles'))
 </Base>
 
 <style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    min-height: 44px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
-  .page-title {
-    margin: 0;
-    font-size: 44px;
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
   .section-title {
     margin: 16px 0 0;
     font-family: var(--font-mono);
@@ -152,14 +138,6 @@ const roles = (await getCollection('roles'))
     border: 1px solid var(--border);
     border-radius: 4px;
   }
-  .prose :global(p) {
-    margin: 0 0 12px;
-    max-width: 720px;
-    color: var(--text-soft);
-  }
-  .prose :global(p:last-child) {
-    margin-bottom: 0;
-  }
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -168,9 +146,6 @@ const roles = (await getCollection('roles'))
   @media (max-width: 520px) {
     .card {
       padding: 20px;
-    }
-    .page-title {
-      font-size: 32px;
     }
   }
 </style>

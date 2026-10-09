@@ -6,6 +6,7 @@ import Panel from '../../components/Panel.astro';
 import StatusBadge from '../../components/StatusBadge.astro';
 import BlueprintFigure from '../../components/BlueprintFigure.astro';
 import PendingSection from '../../components/PendingSection.astro';
+import { SITE } from '../../lib/site';
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -37,7 +38,7 @@ const screenWidth = Math.round((1246 - 16 * (screenColumns - 1)) / screenColumns
 const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
 ---
 
-<Base title={`${data.title} · Mikołaj Bigaj`} description={data.summary}>
+<Base title={`${data.title} · ${SITE.name}`} description={data.summary}>
   <a class="back" href="/">← control room</a>
 
   <section class="hero">
@@ -46,7 +47,7 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
         <span class="kicker">PROJECT {number}</span>
         <StatusBadge status={data.status} />
       </div>
-      <h1>{data.title}</h1>
+      <h1 class="page-title">{data.title}</h1>
       <p class="summary">{data.summary}</p>
     </div>
     <div class="hero-side">
@@ -148,14 +149,6 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
 </Base>
 
 <style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    min-height: 44px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
   .hero {
     background: var(--panel);
     border: 1px solid var(--border);
@@ -185,11 +178,6 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
     color: var(--accent);
   }
   h1 {
-    margin: 0;
-    font-size: 44px;
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.02em;
     overflow-wrap: anywhere;
   }
   .summary {
@@ -222,14 +210,6 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
     border-radius: 4px;
     font-family: var(--font-mono);
     font-size: 14px;
-  }
-  .prose :global(p) {
-    margin: 0 0 12px;
-    max-width: 720px;
-    color: var(--text-soft);
-  }
-  .prose :global(p:last-child) {
-    margin-bottom: 0;
   }
   .cols {
     display: flex;
@@ -304,9 +284,6 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
   @media (max-width: 520px) {
     .hero {
       padding: 20px;
-    }
-    h1 {
-      font-size: 32px;
     }
   }
 </style>
