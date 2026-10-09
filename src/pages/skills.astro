@@ -15,6 +15,7 @@ const areas = AREAS.map((a) => ({ id: a.id, label: a.label }));
   description="Every skill, how often it is used, and the projects, work and roles where it was used."
 >
   <a class="back" href="/">← control room</a>
+  <h1 class="page-title">Skills</h1>
   <SkillMap client:load skills={skills} areas={areas} evidence={evidence} />
 </Base>
 
@@ -26,5 +27,17 @@ const areas = AREAS.map((a) => ({ id: a.id, label: a.label }));
     min-height: 44px;
     font-family: var(--font-mono);
     font-size: 14px;
+  }
+  .page-title {
+    margin: 0;
+    font-size: 44px;
+    line-height: 1.1;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  @media (max-width: 520px) {
+    .page-title {
+      font-size: 32px;
+    }
   }
 </style>

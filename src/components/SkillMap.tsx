@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { EvidenceItem } from '../lib/evidence';
 
 type Tier = 'daily' | 'solid' | 'familiar';
@@ -16,11 +16,17 @@ const PREFIX = '#skill-';
 export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [interactive, setInteractive] = useState(false);
+  const chipRefs = useRef(new Map<string, HTMLButtonElement>());
 
   // Read the hash only after mount so the first client render matches the server HTML.
   useEffect(() => {
     const fromHash = () => {
-      const h = decodeURIComponent(location.hash);
+      let h = '';
+      try {
+        h = decodeURIComponent(location.hash);
+      } catch {
+        // A malformed fragment selects nothing.
+      }
       const id = h.startsWith(PREFIX) ? h.slice(PREFIX.length) : null;
       setSelected(id && skills.some((s) => s.id === id) ? id : null);
     };
@@ -31,6 +37,8 @@ export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
   }, [skills]);
 
   const choose = (id: string | null) => {
+    // Hand focus back to the chip that was selected, since the clear button disappears.
+    if (id === null && selected) chipRefs.current.get(selected)?.focus();
     setSelected(id);
     history.replaceState(null, '', id ? `${PREFIX}${id}` : location.pathname + location.search);
   };
@@ -44,8 +52,13 @@ export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
     }))
     .filter((g) => g.skills.length > 0);
 
+  const selectedName = skills.find((s) => s.id === selected)?.name;
+
   return (
     <div className="sm">
+      <div role="status" className="sr-only">
+        {interactive ? (selectedName ? `Showing ${selectedName}` : 'Showing all skills') : ''}
+      </div>
       <section className="sm-panel" aria-label="Skills">
         <div className="sm-head">
           <div className="sm-label">SKILL MAP</div>
@@ -66,6 +79,10 @@ export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
                     <button
                       type="button"
                       key={s.id}
+                      ref={(el) => {
+                        if (el) chipRefs.current.set(s.id, el);
+                        else chipRefs.current.delete(s.id);
+                      }}
                       className={cls}
                       aria-pressed={selected === s.id}
                       onClick={() => choose(selected === s.id ? null : s.id)}
