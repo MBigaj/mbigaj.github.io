@@ -45,6 +45,44 @@ test('the page never scrolls sideways', async ({ page }) => {
 });
 test('links and chips are at least 44px tall', async ({ page }) => {
   await page.goto('/');
-  for (const el of await page.locator('nav a, a.chip, .identity-links a').all())
+  for (const el of await page.locator('nav a, a.chip, .identity-links a, a.project-row, a[href="/work/"]').all())
     expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+});
+
+test('timeline merges same-employer roles and ends with a dashed education bar', async ({ page }) => {
+  await page.goto('/');
+  const heads = page.locator('#timeline [data-row] .row-head > span:first-child');
+  await expect(heads).toHaveText([
+    'YouGov · Graduate, then Associate Backend Engineer',
+    'MH · Big Data Intern, then Junior Backend Developer',
+    'WithSecure · Data Scientist Intern',
+    'Blulog · Full-stack Developer',
+    'Collegium Da Vinci · BTech Computer Science',
+  ]);
+  const last = page.locator('#timeline [data-row]').last();
+  await expect(last).toContainText('Collegium Da Vinci');
+  expect(await last.locator('.bar').evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
+});
+test('identity facts and links', async ({ page }) => {
+  await page.goto('/');
+  const id = page.locator('#identity');
+  await expect(id.locator('.facts')).toContainText('Associate Backend Engineer, YouGov');
+  await expect(id.locator('.facts')).toContainText('2022');
+  await expect(id.locator('.facts')).toContainText('BTech Computer Science, 2025');
+  const links = id.locator('.identity-links a');
+  await expect(links).toHaveText(['GitHub', 'LinkedIn', 'Email', 'Download CV']);
+  expect(await links.evaluateAll((els) => els.map((e) => e.getAttribute('href')))).toEqual([
+    'https://github.com/MBigaj',
+    'https://www.linkedin.com/in/mikolajbigaj/',
+    'mailto:mikolaj.bigaj.00@gmail.com',
+    '/Mikolaj_Bigaj_CV.pdf',
+  ]);
+});
+test('status markers: circle for in progress, square for shipped', async ({ page }) => {
+  await page.goto('/');
+  const radius = (row: number) =>
+    page.locator('#projects a.project-row').nth(row).locator('.marker').evaluate((e) => getComputedStyle(e).borderTopLeftRadius);
+  expect(await radius(0)).toBe('50%');
+  expect(await radius(1)).toBe('0px');
+  await expect(page.locator('#projects a.project-row').nth(2)).toContainText('shipped');
 });
