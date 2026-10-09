@@ -65,3 +65,18 @@ test('a figure can be scrolled from the keyboard and owns its arrowhead', async 
   expect(ends).toEqual(Array(3).fill('url(#bp-arrow-page-1-fig-01)'));
   expect(await page.locator('.bp-label').first().evaluate((e) => getComputedStyle(e).fontWeight)).toBe('600');
 });
+
+test('a link in a Markdown body is underlined, accent coloured and tall enough to tap', async ({ page }) => {
+  await page.goto('/projects/talis/');
+  // The seed content has no Markdown link yet, so put one where a rendered body would have it.
+  await page.locator('.prose p').first().evaluate((p) => p.insertAdjacentHTML('beforeend', ' <a href="/work/">more</a>'));
+  const link = page.locator('.prose a');
+  const style = await link.evaluate((a) => {
+    const cs = getComputedStyle(a);
+    return { line: cs.textDecorationLine, colour: cs.color };
+  });
+  expect(style).toEqual({ line: 'underline', colour: 'rgb(108, 182, 255)' });
+  expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await link.focus();
+  expect(await link.evaluate((a) => getComputedStyle(a).outlineStyle)).toBe('solid');
+});

@@ -56,6 +56,30 @@ a:hover {
   flex: 5 1 360px;
 }
 
+/* Links in rendered Markdown bodies on project and work pages */
+/*
+ * A link in running text gets a tap target of at least 44 px from padding that the negative
+ * margin cancels sideways, so no word moves. The focus ring is pulled in by almost as much,
+ * to sit just outside the words instead of round the whole target.
+ */
+.prose a {
+  padding: 13px;
+  margin: 0 -13px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.prose a:hover {
+  color: var(--text);
+}
+.prose a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -11px;
+  border-radius: 2px;
+}
+
 /* Skill chips: shared by SkillChip.astro and the SkillMap island */
 .chip {
   display: inline-flex;

@@ -17,6 +17,12 @@ test('the roles list is headed "Roles", since it starts with the current job', a
   await expect(page.locator('article[data-role]').first()).toHaveAttribute('id', 'yougov-associate');
 });
 
+test('a work entry with no Markdown body leaves no empty block', async ({ page }) => {
+  await page.goto('/work/');
+  await expect(page.locator('#ai-chat-api-layer')).toBeVisible();
+  await expect(page.locator('#ai-chat-api-layer .prose')).toHaveCount(0);
+});
+
 test('earlier roles are newest first and link their skills', async ({ page }) => {
   await page.goto('/work/');
   const ids = await page.locator('article[data-role]').evaluateAll((els) => els.map((e) => e.id));

@@ -29,6 +29,12 @@ const roadmapColumns = data.roadmap
     ].filter((c) => c.items.length > 0)
   : [];
 const hasBody = Boolean(project.body?.trim());
+
+// SCREENS lays out up to three columns inside a panel that is 1246 px wide at the
+// full 1360 px page width, with 16 px between columns; below 730 px there is one column.
+const screenColumns = Math.min(Math.max(data.screens.length, 1), 3);
+const screenWidth = Math.round((1246 - 16 * (screenColumns - 1)) / screenColumns);
+const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
 ---
 
 <Base title={`${data.title} · Mikołaj Bigaj`} description={data.summary}>
@@ -115,7 +121,7 @@ const hasBody = Boolean(project.body?.trim());
       <div class="screens">
         {data.screens.map((s) => (
           <figure>
-            <Image src={s.src} alt={s.alt} widths={[400, 800]} sizes="(max-width: 700px) 100vw, 420px" />
+            <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes} />
             <figcaption>{s.caption}</figcaption>
           </figure>
         ))}
@@ -125,7 +131,7 @@ const hasBody = Boolean(project.body?.trim());
     <PendingSection name="SCREENS" />
   )}
 
-  {data.roadmap ? (
+  {roadmapColumns.length > 0 ? (
     <Panel label="ROADMAP">
       <div class="cols">
         {roadmapColumns.map((c) => (
@@ -273,12 +279,11 @@ const hasBody = Boolean(project.body?.trim());
     border: 1px solid var(--text-2);
   }
   .screens {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: 16px;
   }
   .screens figure {
-    flex: 1 1 300px;
     min-width: 0;
     margin: 0;
     display: flex;

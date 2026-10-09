@@ -94,6 +94,7 @@ const work = defineCollection({
     title: z.string(),
     code: z.string(),
     employer: z.string(),
+    period: z.string().optional(),
     order: z.number().int(),
     summary: z.string(),
     tags: z.array(z.string()),

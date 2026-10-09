@@ -12,9 +12,11 @@ import { SITE } from '../lib/site';
 interface Props {
   title: string;
   description: string;
+  /** For pages with no address of their own, such as the 404 page: no canonical link, and kept out of search indexes. */
+  noindex?: boolean;
 }
 
-const { title, description } = Astro.props;
+const { title, description, noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const here = Astro.url.pathname.replace(/\/$/, '');
 const nav = [
@@ -31,12 +33,12 @@ const nav = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:url" content={canonical} />
+    {!noindex && <meta property="og:url" content={canonical} />}
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>

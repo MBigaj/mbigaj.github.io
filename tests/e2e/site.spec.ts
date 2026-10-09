@@ -14,6 +14,21 @@ test('every internal link on the home page resolves', async ({ page, request }) 
   for (const h of hrefs) expect((await request.get(h)).status(), h).toBe(200);
 });
 
+test('the 404 page is kept out of search indexes', async ({ page }) => {
+  await page.goto('/404.html');
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+  await expect(page.locator('meta[property="og:url"]')).toHaveCount(0);
+  await expect(page).toHaveTitle('Not found · Mikołaj Bigaj');
+});
+
+test('ordinary pages keep their canonical address and stay indexable', async ({ page }) => {
+  await page.goto('/work/');
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', 'https://mbigaj.github.io/work/');
+  await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', 'https://mbigaj.github.io/work/');
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
+});
+
 test('the first Tab stop is a skip link to the main content', async ({ page }) => {
   await page.goto('/');
   const skip = page.getByRole('link', { name: 'Skip to content' });

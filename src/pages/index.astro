@@ -14,6 +14,13 @@ const roles = (await getCollection('roles')).map((r) => r.data);
 
 const current = roles.find((r) => r.kind === 'role' && r.end === null);
 const education = roles.find((r) => r.kind === 'education');
+if (!current) {
+  throw new Error('Home page: no role in src/data/roles.json has "end": null, so there is no current role to show under NOW');
+}
+if (!education) {
+  throw new Error('Home page: src/data/roles.json has no entry with "kind": "education" to show under DEGREE');
+}
+const degree = education.end ? `${education.title}, ${education.end.slice(0, 4)}` : education.title;
 const since = String(Math.min(...roles.filter((r) => r.kind === 'role').map((r) => Number(r.start.slice(0, 4)))));
 
 const projects = (await getCollection('projects'))
@@ -37,9 +44,9 @@ const work = (await getCollection('work'))
 >
   <div class="pair">
     <IdentityPanel
-      now={`${current?.title}, ${current?.employer}`}
+      now={`${current.title}, ${current.employer}`}
       since={since}
-      degree={`${education?.title}, ${education?.end?.slice(0, 4)}`}
+      degree={degree}
     />
     <TimelinePanel items={roles} {now} />
   </div>
