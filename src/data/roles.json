@@ -1,0 +1,122 @@
+[
+  {
+    "id": "yougov-associate",
+    "kind": "role",
+    "employer": "YouGov",
+    "title": "Associate Backend Engineer",
+    "start": "2026-08",
+    "end": null,
+    "skills": [
+      "python",
+      "fastapi",
+      "mongodb",
+      "postgresql",
+      "kubernetes",
+      "docker",
+      "ci-cd",
+      "new-relic",
+      "rabbitmq",
+      "elasticsearch",
+      "pytest",
+      "gitlab",
+      "git",
+      "aws",
+      "agile-kanban"
+    ]
+  },
+  {
+    "id": "yougov-graduate",
+    "kind": "role",
+    "employer": "YouGov",
+    "title": "Graduate Backend Engineer",
+    "start": "2025-08",
+    "end": "2026-08",
+    "skills": [
+      "python",
+      "fastapi",
+      "mongodb",
+      "postgresql",
+      "kubernetes",
+      "docker",
+      "ci-cd",
+      "new-relic",
+      "rabbitmq",
+      "elasticsearch",
+      "pytest",
+      "gitlab",
+      "git",
+      "aws",
+      "agile-kanban"
+    ]
+  },
+  {
+    "id": "mh-junior",
+    "kind": "role",
+    "employer": "MH",
+    "title": "Junior Backend Developer",
+    "start": "2023-09",
+    "end": "2024-10",
+    "skills": [
+      "postgresql",
+      "elasticsearch",
+      "ci-cd",
+      "git",
+      "agile-kanban"
+    ],
+    "summary": "Backend features for a web application: data models, PostgreSQL queries and migrations, system structure and unit tests."
+  },
+  {
+    "id": "mh-intern",
+    "kind": "role",
+    "employer": "MH",
+    "title": "Big Data Intern",
+    "start": "2023-03",
+    "end": "2023-09",
+    "skills": [
+      "postgresql",
+      "ci-cd",
+      "git",
+      "agile-kanban"
+    ],
+    "summary": "Big data internship: PostgreSQL querying and migrations for backend systems."
+  },
+  {
+    "id": "withsecure",
+    "kind": "role",
+    "employer": "WithSecure",
+    "title": "Data Scientist Intern",
+    "start": "2022-09",
+    "end": "2022-12",
+    "skills": [
+      "python",
+      "pytest",
+      "ci-cd",
+      "git"
+    ],
+    "summary": "Python software engineering on security systems, with pytest test suites."
+  },
+  {
+    "id": "blulog",
+    "kind": "role",
+    "employer": "Blulog",
+    "title": "Full-stack Developer",
+    "start": "2022-07",
+    "end": "2022-08",
+    "skills": [
+      "go",
+      "vue",
+      "git",
+      "github"
+    ],
+    "summary": "Built a new feature for web and mobile clients: a Go backend with a REST API and a Vue frontend."
+  },
+  {
+    "id": "cdv-btech",
+    "kind": "education",
+    "employer": "Collegium Da Vinci",
+    "title": "BTech Computer Science",
+    "start": "2021-10",
+    "end": "2025-03",
+    "skills": []
+  }
+]
