@@ -4,13 +4,23 @@ import Base from '../layouts/Base.astro';
 import SkillChip from '../components/SkillChip.astro';
 import BlueprintFigure from '../components/BlueprintFigure.astro';
 import { formatPeriod, monthIndex } from '../lib/timeline';
+import { SITE } from '../lib/site';
 
 const skills = await getCollection('skills');
 const skillById = new Map(skills.map((s) => [s.data.id, s.data]));
+const skillFor = (id: string, roleId: string) => {
+  const skill = skillById.get(id);
+  if (!skill) throw new Error(`Unknown skill "${id}" referenced by role "${roleId}"`);
+  return skill;
+};
 
 const work = (await getCollection('work')).sort((a, b) => a.data.order - b.data.order);
 const pieces = await Promise.all(
-  work.map(async (w) => ({ entry: w, Content: (await render(w)).Content })),
+  work.map(async (w) => ({
+    entry: w,
+    Content: (await render(w)).Content,
+    hasBody: Boolean(w.body?.trim()),
+  })),
 );
 
 const roles = (await getCollection('roles'))
@@ -19,7 +29,7 @@ const roles = (await getCollection('roles'))
 ---
 
 <Base
-  title="Work · Mikołaj Bigaj"
+  title={`Work · ${SITE.name}`}
   description="Backend work at YouGov and the earlier roles that led to it."
 >
   <a class="back" href="/">← control room</a>
@@ -27,24 +37,25 @@ const roles = (await getCollection('roles'))
   <h1 class="page-title">Work</h1>
 
   {
-    pieces.map(({ entry, Content }) => (
+    pieces.map(({ entry, Content, hasBody }) => (
       <article id={entry.id} class="card">
         <div class="meta">
           <span class="code">{entry.data.code}</span>
           <span>{entry.data.employer}</span>
+          {entry.data.period && <span>{entry.data.period}</span>}
         </div>
         <h2>{entry.data.title}</h2>
         <p class="summary">{entry.data.summary}</p>
         <ul class="tags" aria-label="Tags">
           {entry.data.tags.map((t) => <li>{t}</li>)}
         </ul>
-        <div class="prose"><Content /></div>
-        {entry.data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} />)}
+        {hasBody && <div class="prose"><Content /></div>}
+        {entry.data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} scope={entry.id} />)}
       </article>
     ))
   }
 
-  <h2 class="section-title">Earlier roles</h2>
+  <h2 class="section-title">Roles</h2>
 
   {
     roles.map((r) => (
@@ -57,8 +68,7 @@ const roles = (await getCollection('roles'))
         {r.data.summary && <p class="summary">{r.data.summary}</p>}
         <div class="chips">
           {r.data.skills
-            .map((ref) => skillById.get(ref.id))
-            .filter((s): s is NonNullable<typeof s> => s !== undefined)
+            .map((ref) => skillFor(ref.id, r.id))
             .map((s) => <SkillChip skill={s} href={`/skills/#skill-${s.id}`} />)}
         </div>
       </article>
@@ -67,21 +77,6 @@ const roles = (await getCollection('roles'))
 </Base>
 
 <style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    min-height: 44px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
-  .page-title {
-    margin: 0;
-    font-size: 44px;
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
   .section-title {
     margin: 16px 0 0;
     font-family: var(--font-mono);
@@ -143,14 +138,6 @@ const roles = (await getCollection('roles'))
     border: 1px solid var(--border);
     border-radius: 4px;
   }
-  .prose :global(p) {
-    margin: 0 0 12px;
-    max-width: 720px;
-    color: var(--text-soft);
-  }
-  .prose :global(p:last-child) {
-    margin-bottom: 0;
-  }
   .chips {
     display: flex;
     flex-wrap: wrap;
@@ -159,9 +146,6 @@ const roles = (await getCollection('roles'))
   @media (max-width: 520px) {
     .card {
       padding: 20px;
-    }
-    .page-title {
-      font-size: 32px;
     }
   }
 </style>

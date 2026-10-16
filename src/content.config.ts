@@ -1,9 +1,11 @@
 import { defineCollection, reference } from 'astro:content';
 import { z } from 'astro/zod';
 import { glob, file } from 'astro/loaders';
+import { AREA_IDS, TIERS } from './lib/site';
 
 const ym = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/);
 
+// Text in a figure is drawn at a fixed size inside fixed boxes, so it is capped rather than wrapped.
 const figure = z.object({
   id: z.string(),
   caption: z.string(),
@@ -11,8 +13,8 @@ const figure = z.object({
     .array(
       z.object({
         id: z.string(),
-        label: z.string(),
-        sub: z.string().optional(),
+        label: z.string().max(20, 'A figure node label can be at most 20 characters'),
+        sub: z.string().max(22, 'A figure node sub line can be at most 22 characters').optional(),
         col: z.number().int().min(0),
         row: z.number().int().min(0),
       }),
@@ -23,7 +25,7 @@ const figure = z.object({
       z.object({
         from: z.string(),
         to: z.string(),
-        label: z.string().optional(),
+        label: z.string().max(18, 'A figure edge label can be at most 18 characters').optional(),
         dashed: z.boolean().default(false),
       }),
     )
@@ -35,8 +37,8 @@ const skills = defineCollection({
   schema: z.object({
     id: z.string(),
     name: z.string(),
-    area: z.enum(['languages', 'data', 'infrastructure', 'observability', 'delivery']),
-    tier: z.enum(['daily', 'solid', 'familiar']),
+    area: z.enum(AREA_IDS),
+    tier: z.enum(TIERS),
   }),
 });
 
@@ -63,7 +65,7 @@ const projects = defineCollection({
       order: z.number().int(),
       status: z.enum(['in-progress', 'shipped']),
       skills: z.array(reference('skills')).min(1),
-      stackExtra: z.array(z.string()).default([]),
+      stack: z.array(z.string()).min(1),
       repo: z.string().url(),
       started: z.string().optional(),
       ended: z.string().optional(),
@@ -93,6 +95,7 @@ const work = defineCollection({
     title: z.string(),
     code: z.string(),
     employer: z.string(),
+    period: z.string().optional(),
     order: z.number().int(),
     summary: z.string(),
     tags: z.array(z.string()),

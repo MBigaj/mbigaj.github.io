@@ -30,7 +30,7 @@ const groups = AREAS.map((a) => ({
     {
       groups.map((g) => (
         <div class="group">
-          <h2>{g.label}</h2>
+          <h3>{g.label}</h3>
           <div class="chips">
             {g.skills.map((s) => <SkillChip skill={s} href={`/skills/#skill-${s.id}`} />)}
           </div>
@@ -92,7 +92,7 @@ const groups = AREAS.map((a) => ({
     flex-direction: column;
     gap: 10px;
   }
-  h2 {
+  h3 {
     margin: 0;
     font-size: 14px;
     font-weight: 400;

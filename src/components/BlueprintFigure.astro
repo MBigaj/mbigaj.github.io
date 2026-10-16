@@ -4,16 +4,18 @@ import { layoutFigure, type Figure } from '../lib/figure';
 interface Props {
   figure: Figure;
   number: number;
+  /** Tells apart figures on one page that share a number and an id, as two work entries can. */
+  scope?: string;
 }
 
-const { figure, number } = Astro.props;
+const { figure, number, scope = 'page' } = Astro.props;
 const laid = layoutFigure(figure);
-const markerId = `bp-arrow-${figure.id}`;
+const markerId = `bp-arrow-${scope}-${number}-${figure.id}`.replace(/[^\w-]/g, '-');
 const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M'} ${x} ${y}`).join(' ');
 ---
 
 <figure class="bp">
-  <div class="bp-sheet">
+  <div class="bp-sheet" tabindex="0" role="group" aria-label={figure.caption}>
     <svg
       role="img"
       width={laid.width}
@@ -105,7 +107,7 @@ const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M
   }
   .bp-label {
     font-size: 15px;
-    font-weight: 700;
+    font-weight: 600;
     fill: var(--bp-text);
   }
   .bp-sub {

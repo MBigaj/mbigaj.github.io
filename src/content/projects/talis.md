@@ -6,7 +6,7 @@ started: April 2024
 ended: February 2025
 summary: "Board game catalogue with per-player recommendations from a clustering model. Led the team of four that delivered it."
 skills: [python, django, react, postgresql, pytest, agile-kanban, team-leadership, sprint-planning, git, github]
-stackExtra: ["clustering model"]
+stack: ["Django", "React", "PostgreSQL", "clustering model"]
 repo: https://github.com/PKrystian/Talis
 team:
   role: Team lead and full-stack developer, weighted to the backend

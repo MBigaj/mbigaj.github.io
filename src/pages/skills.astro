@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import SkillMap from '../components/SkillMap';
 import { loadEvidence } from '../lib/load-evidence';
-import { AREAS } from '../lib/site';
+import { AREAS, SITE } from '../lib/site';
 
 const skills = (await getCollection('skills')).map((s) => s.data);
 const evidence = await loadEvidence();
@@ -11,33 +11,10 @@ const areas = AREAS.map((a) => ({ id: a.id, label: a.label }));
 ---
 
 <Base
-  title="Skills · Mikołaj Bigaj"
+  title={`Skills · ${SITE.name}`}
   description="Every skill, how often it is used, and the projects, work and roles where it was used."
 >
   <a class="back" href="/">← control room</a>
   <h1 class="page-title">Skills</h1>
   <SkillMap client:load skills={skills} areas={areas} evidence={evidence} />
 </Base>
-
-<style>
-  .back {
-    display: inline-flex;
-    align-items: center;
-    align-self: flex-start;
-    min-height: 44px;
-    font-family: var(--font-mono);
-    font-size: 14px;
-  }
-  .page-title {
-    margin: 0;
-    font-size: 44px;
-    line-height: 1.1;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-  }
-  @media (max-width: 520px) {
-    .page-title {
-      font-size: 32px;
-    }
-  }
-</style>

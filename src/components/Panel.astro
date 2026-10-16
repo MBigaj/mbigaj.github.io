@@ -4,10 +4,12 @@ interface Props {
   id?: string;
 }
 const { label, id } = Astro.props;
+const slug = label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+const headingId = `${id ?? slug}-heading`;
 ---
 
-<section id={id} class="panel">
-  <div class="panel-label">{label}</div>
+<section id={id} class="panel" aria-labelledby={headingId}>
+  <h2 id={headingId} class="panel-label">{label}</h2>
   <slot />
 </section>
 
@@ -24,8 +26,10 @@ const { label, id } = Astro.props;
     gap: 14px;
   }
   .panel-label {
+    margin: 0;
     font-family: var(--font-mono);
     font-size: 13px;
+    font-weight: 400;
     letter-spacing: 0.08em;
     color: var(--accent);
   }

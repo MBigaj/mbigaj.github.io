@@ -17,6 +17,7 @@ export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const [interactive, setInteractive] = useState(false);
   const chipRefs = useRef(new Map<string, HTMLButtonElement>());
+  const picked = useRef(false);
 
   // Read the hash only after mount so the first client render matches the server HTML.
   useEffect(() => {
@@ -36,9 +37,22 @@ export default function SkillMap({ skills, areas, evidence }: SkillMapProps) {
     return () => window.removeEventListener('hashchange', fromHash);
   }, [skills]);
 
+  // On a phone the chip panel fills the screen, so a pick would change nothing in sight.
+  // Runs after the filtered state is on the page, and only for a pick: with a hash in the
+  // address the browser has already scrolled. Focus stays on the chip.
+  useEffect(() => {
+    if (!picked.current) return;
+    picked.current = false;
+    const section = selected && document.getElementById(`skill-${selected}`);
+    if (!section) return;
+    const { top, bottom } = section.getBoundingClientRect();
+    if (top < 0 || bottom > window.innerHeight) section.scrollIntoView({ block: 'nearest' });
+  }, [selected]);
+
   const choose = (id: string | null) => {
     // Hand focus back to the chip that was selected, since the clear button disappears.
     if (id === null && selected) chipRefs.current.get(selected)?.focus();
+    picked.current = id !== null;
     setSelected(id);
     history.replaceState(null, '', id ? `${PREFIX}${id}` : location.pathname + location.search);
   };

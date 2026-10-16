@@ -100,6 +100,30 @@ test('the skills page has an h1', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Skills' })).toBeVisible();
 });
 
+test('picking a skill brings its evidence into view without moving focus', async ({ page }) => {
+  await page.goto('/skills/');
+  const chip = page.locator('.chip', { hasText: 'Python' });
+  await expect(chip).toHaveAttribute('aria-pressed', 'false');
+  await chip.click();
+  await expect(page.locator('#skill-python')).toBeInViewport({ ratio: 0.99 });
+  await expect(chip).toBeFocused();
+});
+
+test('evidence runs in project order, then work order, then roles newest first', async ({ page }) => {
+  await page.goto('/skills/');
+  await expect(page.locator('#skill-python').getByRole('link')).toHaveText([
+    'Dark Souls: The Board Game app',
+    'Talis',
+    'Digit recognition',
+    'AI chat API layer',
+    'RPC to API migration',
+    'Lambda to ECS migration',
+    'Associate Backend Engineer, YouGov',
+    'Graduate Backend Engineer, YouGov',
+    'Data Scientist Intern, WithSecure',
+  ]);
+});
+
 test.describe('without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
   test('every skill and its evidence is still listed', async ({ page }) => {

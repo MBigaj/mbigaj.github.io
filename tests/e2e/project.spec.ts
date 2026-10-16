@@ -41,4 +41,42 @@ test('the page has a title, a back link and a stack line', async ({ page }) => {
   await expect(page.locator('main a').first()).toHaveAttribute('href', '/');
   await expect(page.locator('main')).toContainText('Started April 2024');
   await expect(page.locator('main')).toContainText('Finished February 2025');
+  const stack = page.locator('.hero-side > div', { hasText: 'STACK' });
+  await expect(stack).toContainText('Django · React · PostgreSQL · clustering model');
+  await expect(stack).not.toContainText('Sprint planning');
+});
+
+test('section labels are level-2 headings under the project title', async ({ page }) => {
+  await page.goto('/projects/dark-souls-app/');
+  const h2 = await page.getByRole('heading', { level: 2 }).allTextContents();
+  expect(h2).toContain('PROBLEM');
+  expect(h2).toContain('ARCHITECTURE');
+  await expect(page.getByRole('region', { name: 'ARCHITECTURE' })).toContainText('Fig. 01');
+});
+
+test('a figure can be scrolled from the keyboard and owns its arrowhead', async ({ page }) => {
+  await page.goto('/projects/dark-souls-app/');
+  const sheet = page.getByRole('group', { name: 'Request path and telemetry' });
+  await expect(sheet).toHaveClass(/bp-sheet/);
+  await expect(sheet).toHaveAttribute('tabindex', '0');
+  const marker = page.locator('figure svg marker');
+  await expect(marker).toHaveAttribute('id', 'bp-arrow-page-1-fig-01');
+  const ends = await page.locator('figure svg path.bp-edge').evaluateAll((els) => els.map((e) => e.getAttribute('marker-end')));
+  expect(ends).toEqual(Array(3).fill('url(#bp-arrow-page-1-fig-01)'));
+  expect(await page.locator('.bp-label').first().evaluate((e) => getComputedStyle(e).fontWeight)).toBe('600');
+});
+
+test('a link in a Markdown body is underlined, accent coloured and tall enough to tap', async ({ page }) => {
+  await page.goto('/projects/talis/');
+  // The seed content has no Markdown link yet, so put one where a rendered body would have it.
+  await page.locator('.prose p').first().evaluate((p) => p.insertAdjacentHTML('beforeend', ' <a href="/work/">more</a>'));
+  const link = page.locator('.prose a');
+  const style = await link.evaluate((a) => {
+    const cs = getComputedStyle(a);
+    return { line: cs.textDecorationLine, colour: cs.color };
+  });
+  expect(style).toEqual({ line: 'underline', colour: 'rgb(108, 182, 255)' });
+  expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await link.focus();
+  expect(await link.evaluate((a) => getComputedStyle(a).outlineStyle)).toBe('solid');
 });
