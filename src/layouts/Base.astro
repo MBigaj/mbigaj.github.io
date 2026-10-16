@@ -7,6 +7,7 @@ import '@fontsource/ibm-plex-mono/500.css';
 import '@fontsource/ibm-plex-mono/600.css';
 import '../styles/tokens.css';
 import '../styles/global.css';
+import { SITE } from '../lib/site';
 
 interface Props {
   title: string;
@@ -41,7 +42,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
           <a href="/#projects">Projects</a>
           <a href="/work/">Work</a>
           <a href="/skills/">Skills</a>
-          <a href="/Mikolaj_Bigaj_CV.pdf">CV</a>
+          <a href={SITE.cv}>CV</a>
         </nav>
       </header>
       <main>
@@ -49,7 +50,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       </main>
       <footer class="footer">
         <span>Built with Astro and React, deployed to GitHub Pages.</span>
-        <a href="https://github.com/MBigaj/mbigaj.github.io">Source on GitHub</a>
+        <a href={`${SITE.github}/mbigaj.github.io`}>Source on GitHub</a>
       </footer>
     </div>
   </body>
@@ -60,6 +61,11 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
     max-width: 1360px;
     margin: 0 auto;
     padding: 16px 24px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  main {
     display: flex;
     flex-direction: column;
     gap: 16px;

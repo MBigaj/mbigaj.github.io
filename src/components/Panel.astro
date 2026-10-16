@@ -1,0 +1,37 @@
+---
+interface Props {
+  label: string;
+  id?: string;
+}
+const { label, id } = Astro.props;
+---
+
+<section id={id} class="panel">
+  <div class="panel-label">{label}</div>
+  <slot />
+</section>
+
+<style>
+  .panel {
+    position: relative;
+    min-width: 0;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .panel-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  @media (max-width: 520px) {
+    .panel {
+      padding: 20px;
+    }
+  }
+</style>

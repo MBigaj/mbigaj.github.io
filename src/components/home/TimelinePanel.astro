@@ -1,0 +1,102 @@
+---
+import Panel from '../Panel.astro';
+import { SITE } from '../../lib/site';
+import {
+  barGeometry,
+  buildTimelineRows,
+  formatPeriod,
+  timelineAxis,
+  type TimelineRole,
+} from '../../lib/timeline';
+
+interface Props {
+  items: TimelineRole[];
+  now: string;
+}
+const { items, now } = Astro.props;
+const axis = timelineAxis(now);
+const view = buildTimelineRows(items).map((r) => ({
+  key: r.key,
+  education: r.kind === 'education',
+  label: r.label,
+  period: formatPeriod(r.start, r.end),
+  ...barGeometry(r.start, r.end, axis, now),
+}));
+---
+
+<Panel label="02 / TIMELINE" id="timeline">
+  <div class="axis" style={`grid-template-columns: repeat(${axis.years.length}, minmax(0, 1fr))`}>
+    {axis.years.map((y) => <div>{y}</div>)}
+  </div>
+  {
+    view.map((r) => (
+      <div class="row" data-row={r.key}>
+        <div class:list={['row-head', { dim: r.education }]}>
+          <span>{r.label}</span>
+          <span class="period">{r.period}</span>
+        </div>
+        <div class="track">
+          <div
+            class:list={['bar', { 'bar--edu': r.education }]}
+            style={`left:${r.leftPct}%;width:${r.widthPct}%`}
+          />
+        </div>
+      </div>
+    ))
+  }
+  <p class="note">{SITE.timelineNote}</p>
+</Panel>
+
+<style>
+  .axis {
+    display: grid;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 6px;
+  }
+  .row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .row-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 0 12px;
+    font-size: 14px;
+  }
+  .row-head.dim {
+    color: var(--text-2);
+  }
+  .period {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .track {
+    position: relative;
+    height: 10px;
+    background: var(--ground);
+    border-radius: 2px;
+  }
+  .bar {
+    position: absolute;
+    top: 0;
+    height: 10px;
+    box-sizing: border-box;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+  .bar--edu {
+    background: none;
+    border: 1px dashed var(--edu-border);
+  }
+  .note {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-2);
+  }
+</style>
