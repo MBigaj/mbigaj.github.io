@@ -288,3 +288,31 @@ a:hover {
   white-space: nowrap;
   border: 0;
 }
+
+/* Home dashboard: the panels light up one after another (enter.ts adds html.js-enter and .lit) */
+#dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+#dashboard:focus {
+  outline: none;
+}
+html.js-enter #dashboard .panel {
+  opacity: 0.25;
+  transform: translateY(8px);
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+html.js-enter #dashboard.lit .panel {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.js-enter #dashboard .panel {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
