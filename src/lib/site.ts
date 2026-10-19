@@ -4,6 +4,8 @@ export const SITE = {
   tagline: 'Backend engineer · Python · Poland',
   pitch:
     'I build Python services and the infrastructure they run on: APIs, data stores, CI/CD pipelines and Kubernetes deployments.',
+  about:
+    "I'm a Computer Science graduate focused on Python software engineering. I've worked across a range of programming languages, databases, deployment systems and analytical tools. I work to get better at what I do every day, and I pick up new technologies quickly and adapt fast.",
   email: 'mikolaj.bigaj.00@gmail.com',
   github: 'https://github.com/MBigaj',
   linkedin: 'https://www.linkedin.com/in/mikolajbigaj/',
