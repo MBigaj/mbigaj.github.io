@@ -22,6 +22,7 @@ if (dashboard) {
   } catch {
     // a malformed hash points at nothing; keep it as typed
   }
+  // Deliberately different from the entrance skip in the head script of src/layouts/Base.astro (any hash except #intro).
   const target = id ? document.getElementById(id) : null;
   const landedInside = target !== null && dashboard.contains(target);
 

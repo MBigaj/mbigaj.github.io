@@ -229,7 +229,16 @@ const opacityOf = (page: Page, selector: string) => page.locator(selector).first
 test.describe('page-load entrance', () => {
   test('elements start hidden, then all arrive at full opacity with no offset', async ({ page }) => {
     await page.goto('/');
-    expect(Number(await opacityOf(page, '#intro h1'))).toBeLessThan(1);
+    // Not a raw opacity read: on a slow runner the load event can arrive after the animation ends
+    const anim = await page.locator('#intro h1').evaluate((e) => {
+      const a = e.getAnimations()[0];
+      const t = a?.effect?.getTiming();
+      return a ? { delay: Number(t!.delay), duration: Number(t!.duration), currentTime: Number(a.currentTime) } : null;
+    });
+    expect(anim).not.toBeNull();
+    expect(anim!.delay).toBe(360);
+    expect(anim!.duration).toBe(900);
+    expect(anim!.currentTime).toBeLessThan(anim!.delay + anim!.duration);
     await page.waitForTimeout(2200);
     for (const selector of ENTRANCE) {
       const style = await page.locator(selector).first().evaluate((e) => {

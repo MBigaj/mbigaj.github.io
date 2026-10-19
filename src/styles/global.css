@@ -343,7 +343,7 @@ html.js-enter #dashboard.lit .panel {
   animation: bob 2.4s ease-in-out 1900ms infinite;
 }
 .enter:hover .arrow,
-.enter:focus .arrow {
+.enter:focus-visible .arrow {
   animation-play-state: paused;
 }
 /* Landing inside the dashboard (set by the inline script in Base.astro before first paint) */
@@ -352,6 +352,14 @@ html.skip-entrance .enter-anim {
 }
 html.skip-entrance .enter .arrow {
   animation-delay: 0ms;
+}
+/* Printing soon after load must not capture faint, offset elements */
+@media print {
+  .enter-anim,
+  html.skip-entrance .enter-anim,
+  .enter .arrow {
+    animation: none;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .enter-anim,
