@@ -9,13 +9,19 @@ if (dashboard) {
   const light = () => dashboard.classList.add('lit');
 
   document.querySelector<HTMLAnchorElement>('.enter')?.addEventListener('click', (event) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
     dashboard.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
     history.replaceState(null, '', '#dashboard');
     dashboard.focus({ preventScroll: true });
   });
 
-  const id = decodeURIComponent(location.hash.slice(1));
+  let id = location.hash.slice(1);
+  try {
+    id = decodeURIComponent(id);
+  } catch {
+    // a malformed hash points at nothing; keep it as typed
+  }
   const target = id ? document.getElementById(id) : null;
   const landedInside = target !== null && dashboard.contains(target);
 
@@ -29,7 +35,9 @@ if (dashboard) {
         observer.disconnect();
         light();
       },
-      { threshold: 0.05 },
+      // threshold 0 with a small bottom margin: lit as soon as the top of the dashboard is on screen,
+      // however tall the dashboard is
+      { threshold: 0, rootMargin: '0px 0px -10% 0px' },
     );
     document.documentElement.classList.add('js-enter');
     observer.observe(dashboard);

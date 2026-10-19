@@ -301,13 +301,14 @@ a:hover {
 html.js-enter #dashboard .panel {
   opacity: 0.25;
   transform: translateY(8px);
-  transition:
-    opacity 300ms ease-out,
-    transform 300ms ease-out;
 }
+/* The transition belongs to lighting up only, so adding the dimmed state never animates */
 html.js-enter #dashboard.lit .panel {
   opacity: 1;
   transform: none;
+  transition:
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
 }
 @media (prefers-reduced-motion: reduce) {
   html.js-enter #dashboard .panel {

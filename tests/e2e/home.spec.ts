@@ -178,6 +178,29 @@ test.describe('intro screen', () => {
     await context.close();
   });
 
+  test('scrolling by wheel lights the panels once the dashboard top is in view', async ({ page }) => {
+    await page.goto('/');
+    const intro = await page.locator('#intro').evaluate((e) => e.getBoundingClientRect().height);
+    await page.mouse.move(100, 100);
+    await page.mouse.wheel(0, intro + 100);
+    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 1500 }).toBe(true);
+  });
+
+  test('with reduced motion the click jumps to the dashboard instantly', async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.locator('.enter').click();
+    const top = await page.evaluate(() => Math.abs(document.getElementById('dashboard')!.getBoundingClientRect().top));
+    expect(top).toBeLessThan(4);
+    await context.close();
+  });
+
+  test('loading /#dashboard shows the panels lit at once', async ({ page }) => {
+    await page.goto('/#dashboard');
+    expect((await opacities(page)).every((o) => o === '1')).toBe(true);
+  });
+
   test('loading a hash inside the dashboard shows it lit at once', async ({ page }) => {
     await page.goto('/#projects');
     expect((await opacities(page)).every((o) => o === '1')).toBe(true);

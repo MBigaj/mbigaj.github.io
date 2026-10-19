@@ -67,6 +67,18 @@ const nav = [
   </body>
 </html>
 
+<style is:global>
+  :root {
+    /* Space above the page content: shell padding, top bar and gap. Intro.astro sizes against it. */
+    --topbar-h: 96px;
+  }
+  @media (max-width: 520px) {
+    :root {
+      --topbar-h: 140px;
+    }
+  }
+</style>
+
 <style>
   .skip {
     position: absolute;

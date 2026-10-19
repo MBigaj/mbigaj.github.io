@@ -42,7 +42,7 @@ const links = [
 
 <style>
   #intro {
-    min-height: calc(100svh - 96px);
+    min-height: calc(100svh - var(--topbar-h));
     display: flex;
     flex-direction: column;
   }
@@ -153,12 +153,6 @@ const links = [
     font-size: 16px;
     color: var(--accent);
   }
-  @media (max-width: 520px) {
-    /* The top bar wraps to two rows on a phone, so it takes more of the first screen */
-    #intro {
-      min-height: calc(100svh - 140px);
-    }
-  }
   @media (max-width: 760px) {
     .intro-main {
       flex-direction: column;
@@ -168,14 +162,7 @@ const links = [
     /* A wider crop keeps the whole intro and the enter link on a phone's first screen */
     .frame img {
       aspect-ratio: 2 / 1;
-      object-position: 50% 28%;
-    }
-    .text {
-      gap: 14px;
-    }
-    p {
-      font-size: 16px;
-      line-height: 1.55;
+      object-position: 50% 21%;
     }
     .frame {
       flex: 0 1 auto;
@@ -185,6 +172,11 @@ const links = [
     .text {
       flex: 0 1 auto;
       width: 100%;
+      gap: 14px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.55;
     }
   }
 </style>
