@@ -63,8 +63,14 @@ test('the page never scrolls sideways', async ({ page }) => {
   await page.goto('/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+// Waits for the page-load entrance to end; the endless idle bob is not part of it
+const entranceDone = (page: Page) =>
+  page.waitForFunction(() =>
+    document.getAnimations().every((a) => a.playState === 'finished' || a.effect?.getTiming().iterations === Infinity));
+
 test('links and chips are at least 44px tall', async ({ page }) => {
   await page.goto('/');
+  await entranceDone(page);
   for (const el of await page.locator('nav a, a.chip, .identity-links a, .intro-links a, .enter, a.project-row, a[href="/work/"]').all())
     expect((await el.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 });
@@ -146,7 +152,7 @@ test.describe('intro screen', () => {
     await expect.poll(() => page.evaluate(() => Math.abs(document.getElementById('dashboard')!.getBoundingClientRect().top)), { timeout: 3000 }).toBeLessThan(4);
     expect(page.url()).toMatch(/#dashboard$/);
     await expect(page.locator('#dashboard')).toBeFocused();
-    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 1500 }).toBe(true);
+    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 3000 }).toBe(true);
     expect(await page.evaluate(() => history.length)).toBe(historyBefore);
   });
 
@@ -155,7 +161,7 @@ test.describe('intro screen', () => {
     await expect(page.locator('html')).toHaveClass(/js-enter/);
     expect((await opacities(page)).every((o) => o === '0.25')).toBe(true);
     await page.evaluate(() => window.scrollTo({ top: document.getElementById('dashboard')!.offsetTop, behavior: 'instant' }));
-    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 1500 }).toBe(true);
+    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 3000 }).toBe(true);
   });
 
   test('without JavaScript the panels are fully visible and enter is a plain anchor', async ({ browser }) => {
@@ -183,7 +189,7 @@ test.describe('intro screen', () => {
     const intro = await page.locator('#intro').evaluate((e) => e.getBoundingClientRect().height);
     await page.mouse.move(100, 100);
     await page.mouse.wheel(0, intro + 100);
-    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 1500 }).toBe(true);
+    await expect.poll(async () => (await opacities(page)).every((o) => o === '1'), { timeout: 3000 }).toBe(true);
   });
 
   test('with reduced motion the click jumps to the dashboard instantly', async ({ browser }) => {
@@ -214,4 +220,79 @@ test.describe('intro screen', () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     });
   }
+});
+
+const ENTRANCE = ['.topbar', '#intro .frame', '#intro .hello', '#intro h1', '#intro .tagline', '#intro p', '#intro .intro-links', '#intro .enter'];
+const IDENTITY = /^(none|matrix\(1, 0, 0, 1, 0, 0\))$/;
+const opacityOf = (page: Page, selector: string) => page.locator(selector).first().evaluate((e) => getComputedStyle(e).opacity);
+
+test.describe('page-load entrance', () => {
+  test('elements start hidden, then all arrive at full opacity with no offset', async ({ page }) => {
+    await page.goto('/');
+    expect(Number(await opacityOf(page, '#intro h1'))).toBeLessThan(1);
+    await page.waitForTimeout(2200);
+    for (const selector of ENTRANCE) {
+      const style = await page.locator(selector).first().evaluate((e) => {
+        const c = getComputedStyle(e);
+        return { opacity: c.opacity, transform: c.transform };
+      });
+      expect(style.opacity, selector).toBe('1');
+      expect(style.transform, selector).toMatch(IDENTITY);
+    }
+  });
+
+  test('the enter link starts later than the name', async ({ page }) => {
+    await page.goto('/');
+    const delay = (selector: string) =>
+      page.locator(selector).evaluate((e) => parseFloat(getComputedStyle(e).animationDelay));
+    expect(await delay('#intro .enter')).toBeGreaterThan(await delay('#intro h1'));
+  });
+
+  test('the entrance runs in the specified order', async ({ page }) => {
+    await page.goto('/');
+    const delays = await Promise.all(
+      ENTRANCE.map((s) => page.locator(s).first().evaluate((e) => parseFloat(getComputedStyle(e).animationDelay))),
+    );
+    expect(delays).toEqual([0, 0.12, 0.24, 0.36, 0.48, 0.6, 0.72, 1]);
+  });
+
+  test('with reduced motion everything is final at once and the arrow is still', async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await context.newPage();
+    await page.goto('/');
+    for (const selector of ENTRANCE) expect(await opacityOf(page, selector), selector).toBe('1');
+    const running = await page.locator('#intro .arrow').evaluate((e) => e.getAnimations().length);
+    expect(running).toBe(0);
+    await context.close();
+  });
+
+  test('without JavaScript the entrance still ends with everything visible', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('/');
+    await page.waitForTimeout(2200);
+    for (const selector of ENTRANCE) expect(await opacityOf(page, selector), selector).toBe('1');
+    await context.close();
+  });
+
+  test('loading /#projects skips the entrance', async ({ page }) => {
+    await page.goto('/#projects');
+    expect(await opacityOf(page, '.topbar')).toBe('1');
+    expect(await opacityOf(page, '#intro h1')).toBe('1');
+  });
+
+  test('other pages do not animate the top bar', async ({ page }) => {
+    await page.goto('/work/');
+    expect(await opacityOf(page, '.topbar')).toBe('1');
+    expect(await page.locator('.topbar').evaluate((e) => e.getAnimations().length)).toBe(0);
+  });
+
+  test('the arrow bobs after the entrance and pauses on hover', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForTimeout(2200);
+    const state = () => page.locator('#intro .arrow').evaluate((e) => e.getAnimations().map((a) => a.playState));
+    expect(await state()).toEqual(['running']);
+    await page.locator('#intro .enter').hover();
+    expect(await state()).toEqual(['paused']);
+  });
 });
