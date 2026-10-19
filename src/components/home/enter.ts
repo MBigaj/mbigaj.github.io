@@ -27,7 +27,7 @@ if (dashboard) {
 
   if (!reduced && !landedInside && 'IntersectionObserver' in window) {
     dashboard.querySelectorAll<HTMLElement>('.panel').forEach((panel, i) => {
-      panel.style.transitionDelay = `${i * 60}ms`;
+      panel.style.transitionDelay = `${i * 120}ms`;
     });
     const observer = new IntersectionObserver(
       (entries) => {

@@ -307,13 +307,56 @@ html.js-enter #dashboard.lit .panel {
   opacity: 1;
   transform: none;
   transition:
-    opacity 300ms ease-out,
-    transform 300ms ease-out;
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   html.js-enter #dashboard .panel {
     opacity: 1;
     transform: none;
     transition: none;
+  }
+}
+
+/* Page-load entrance: pure CSS, no script needed. Each element drops in from slightly above.
+   Set --d (delay) on the element; --s is an optional starting scale (the photo frame only). */
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-14px) scale(var(--s, 1));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.enter-anim {
+  animation: drop-in 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--d, 0ms) both;
+}
+/* Idle bob of the enter arrow; it starts once the enter link has arrived (1000 ms + 900 ms) */
+@keyframes bob {
+  50% {
+    transform: translateY(4px);
+  }
+}
+.enter .arrow {
+  animation: bob 2.4s ease-in-out 1900ms infinite;
+}
+.enter:hover .arrow,
+.enter:focus .arrow {
+  animation-play-state: paused;
+}
+/* Landing inside the dashboard (set by the inline script in Base.astro before first paint) */
+html.skip-entrance .enter-anim {
+  animation: none;
+}
+html.skip-entrance .enter .arrow {
+  animation-delay: 0ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .enter-anim,
+  html.skip-entrance .enter-anim,
+  .enter .arrow {
+    animation: none;
   }
 }

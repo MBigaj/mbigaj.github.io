@@ -12,7 +12,7 @@ const links = [
 
 <section id="intro" aria-label="Introduction">
   <div class="intro-main">
-    <figure class="frame">
+    <figure class="frame enter-anim" style="--d: 120ms; --s: 0.98">
       <Image
         src={portrait}
         alt="Mikołaj Bigaj"
@@ -24,17 +24,17 @@ const links = [
       <figcaption><span>00 / ABOUT</span><span>Poland</span></figcaption>
     </figure>
     <div class="text">
-      <div class="hello">HELLO, I'M</div>
-      <h1>{SITE.name}</h1>
-      <div class="tagline">{SITE.tagline}</div>
-      <p>{SITE.about}</p>
-      <div class="intro-links">
+      <div class="hello enter-anim" style="--d: 240ms">HELLO, I'M</div>
+      <h1 class="enter-anim" style="--d: 360ms">{SITE.name}</h1>
+      <div class="tagline enter-anim" style="--d: 480ms">{SITE.tagline}</div>
+      <p class="enter-anim" style="--d: 600ms">{SITE.about}</p>
+      <div class="intro-links enter-anim" style="--d: 720ms">
         {links.map((l) => <a href={l.href}>{l.label}</a>)}
       </div>
     </div>
   </div>
   <div class="enter-wrap">
-    <a href="#dashboard" class="enter"><span>enter control room</span><span class="arrow" aria-hidden="true">↓</span></a>
+    <a href="#dashboard" class="enter enter-anim" style="--d: 1000ms"><span>enter control room</span><span class="arrow" aria-hidden="true">↓</span></a>
   </div>
 </section>
 
