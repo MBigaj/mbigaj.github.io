@@ -62,8 +62,24 @@ const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M
       })}
     </svg>
   </div>
+  <span class="bp-hint" hidden aria-hidden="true">scroll ↔</span>
   <figcaption>Fig. 0{number} · {figure.caption}</figcaption>
 </figure>
+
+<script>
+  // Show "scroll" only while a figure is wider than its panel.
+  const sync = (sheet: HTMLElement) => {
+    const hint = sheet.parentElement?.querySelector<HTMLElement>('.bp-hint');
+    if (hint) hint.hidden = sheet.scrollWidth <= sheet.clientWidth;
+  };
+  const observer = new ResizeObserver((entries) => entries.forEach((e) => sync(e.target as HTMLElement)));
+  document.querySelectorAll<HTMLElement>('.bp-sheet').forEach((sheet) => {
+    if (sheet.dataset.hint) return;
+    sheet.dataset.hint = 'true';
+    observer.observe(sheet);
+    sync(sheet);
+  });
+</script>
 
 <style>
   .bp {
@@ -117,6 +133,16 @@ const path = (pts: [number, number][]) => pts.map(([x, y], i) => `${i ? 'L' : 'M
   .bp-edge-label {
     font-size: 13px;
     fill: var(--bp-label);
+  }
+  .bp-hint {
+    align-self: flex-end;
+    margin: -8px 0 -8px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .bp-hint[hidden] {
+    display: none;
   }
   figcaption {
     font-family: var(--font-mono);
