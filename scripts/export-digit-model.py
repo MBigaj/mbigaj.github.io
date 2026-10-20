@@ -3,8 +3,9 @@
 #
 # It imports the original network classes from MBigaj/Digit_recognition_kohonen unchanged:
 # first it trains with the original setup (1000 images, 20 epochs) for comparison, then on all
-# 60,000 MNIST training images, one shuffled epoch at a time for six epochs, keeping the epoch
-# with the best accuracy on the 10,000 test images.
+# 60,000 MNIST training images, one shuffled epoch at a time for six epochs, reporting the
+# accuracy on the 10,000 test images after each.
+# The final epoch's weights are exported, so the reported accuracy is not picked on the test set.
 #
 # Run:
 #   python3 scripts/export-digit-model.py <path to Digit_recognition_kohonen> \
@@ -33,13 +34,12 @@ orig = NeuralNetwork(0.2); orig.train(xtr[:1000], onehot[:1000], 20)
 print('original setup (1000 samples, 20 epochs) test accuracy:', accuracy(orig), flush=True)
 
 np.random.seed(0)
-m = NeuralNetwork(0.2); best = (0, None)
+m = NeuralNetwork(0.2)
 for e in range(6):
     t = time.time(); perm = np.random.permutation(len(xtr))
     m.train(xtr[perm], onehot[perm], 1)
     a = accuracy(m); print(f'full set epoch {e+1}: test accuracy {a:.4f} ({time.time()-t:.0f}s)', flush=True)
-    if a > best[0]:
-        best = (a, [[l.weights.round(5).tolist(), l.bias[0].round(5).tolist()] for l in (m.fcc_1, m.fcc_2, m.fcc_3)])
-json.dump({'layers': [{'weights': w, 'bias': b} for w, b in best[1]], 'activations': ['tanh', 'tanh', 'sigmoid'],
-           'testAccuracy': round(best[0], 4), 'trainedOn': 'MNIST, 60000 training images', 'source': 'MBigaj/Digit_recognition_kohonen @ 8f5235c'}, open(out, 'w'), separators=(',', ':'))
-print('best', best[0])
+final = [[l.weights.round(5).tolist(), l.bias[0].round(5).tolist()] for l in (m.fcc_1, m.fcc_2, m.fcc_3)]
+json.dump({'layers': [{'weights': w, 'bias': b} for w, b in final], 'activations': ['tanh', 'tanh', 'sigmoid'],
+           'testAccuracy': round(a, 4), 'trainedOn': 'MNIST, 60000 training images', 'source': 'MBigaj/Digit_recognition_kohonen @ 8f5235c'}, open(out, 'w'), separators=(',', ':'))
+print('final', a)

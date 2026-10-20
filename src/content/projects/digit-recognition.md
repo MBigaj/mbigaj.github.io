@@ -11,4 +11,4 @@ demo: digits
 
 A feed-forward neural network implemented from scratch and trained on the MNIST dataset. You draw a digit on a canvas and the network predicts which one it is.
 
-The network is a NumPy implementation of a three-layer perceptron (784, 100 and 50 tanh units, 10 sigmoid outputs) trained with backpropagation. For this page it was trained once on the 60,000 MNIST training images and reaches 96.4 % accuracy on the 10,000 test images; the weights run in your browser below.
+The network is a NumPy implementation of a three-layer perceptron (784 inputs, two hidden layers of 100 and 50 tanh units, and 10 sigmoid outputs) trained with backpropagation. For this page it was trained once on the 60,000 MNIST training images and reaches 96.4 % accuracy on the 10,000 test images; the weights run in your browser below.
