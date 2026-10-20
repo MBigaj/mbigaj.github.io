@@ -34,6 +34,7 @@ const { now, since, degree } = Astro.props;
     button.dataset.ready = 'true';
     button.hidden = false;
     let timer: number | undefined;
+    let announce: number | undefined;
 
     const select = () => {
       const range = document.createRange();
@@ -43,20 +44,29 @@ const { now, since, degree } = Astro.props;
       selection?.addRange(range);
     };
 
-    button.addEventListener('click', async () => {
+    const say = (text: string) => {
       window.clearTimeout(timer);
+      window.clearTimeout(announce);
+      status.textContent = '';
+      // Blank first, then set, so a repeat press is announced again.
+      announce = window.setTimeout(() => {
+        status.textContent = text;
+      }, 50);
+      timer = window.setTimeout(() => {
+        button.textContent = 'Copy';
+        status.textContent = '';
+      }, RESET_MS);
+    };
+
+    button.addEventListener('click', async () => {
       try {
         if (!navigator.clipboard) throw new Error('no clipboard');
         await navigator.clipboard.writeText(address.textContent?.trim() ?? '');
         button.textContent = 'Copied';
-        status.textContent = 'Email address copied';
-        timer = window.setTimeout(() => {
-          button.textContent = 'Copy';
-          status.textContent = '';
-        }, RESET_MS);
+        say('Email address copied');
       } catch {
         select();
-        status.textContent = 'Press Ctrl+C to copy';
+        say('Press Ctrl+C to copy');
       }
     });
   }

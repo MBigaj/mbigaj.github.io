@@ -115,8 +115,7 @@ test.describe('copyable email address', () => {
     expect((await page.getByRole('button', { name: 'Copy email address' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
   });
 
-  test('Copy puts the address on the clipboard, says so, and resets after 2 s', async ({ page, context }, testInfo) => {
-    test.skip(testInfo.project.name !== 'desktop', 'clipboard permissions are granted on desktop only');
+  test('Copy puts the address on the clipboard, says so, and resets after 2 s', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.goto('/');
     const button = page.getByRole('button', { name: 'Copy email address' });
@@ -134,6 +133,7 @@ test.describe('copyable email address', () => {
     await page.getByRole('button', { name: 'Copy email address' }).click();
     await expect(page.locator('#identity [role="status"]')).toHaveText('Press Ctrl+C to copy');
     expect(await page.evaluate(() => String(window.getSelection()))).toBe(EMAIL);
+    await expect(page.locator('#identity [role="status"]')).toHaveText('', { timeout: 4000 });
   });
 
   test('a rejected clipboard write falls back the same way', async ({ page }) => {
@@ -146,10 +146,10 @@ test.describe('copyable email address', () => {
     expect(await page.evaluate(() => String(window.getSelection()))).toBe(EMAIL);
   });
 
-  test('without JavaScript the Copy button is hidden and the address stays', async ({ browser }) => {
+  test('without JavaScript the Copy button is hidden and the address stays', async ({ browser, baseURL }) => {
     const context = await browser.newContext({ javaScriptEnabled: false });
     const page = await context.newPage();
-    await page.goto('http://localhost:4331/');
+    await page.goto(new URL('/', baseURL).href);
     await expect(page.locator('#identity .email')).toBeVisible();
     await expect(page.locator('#identity .email')).toHaveText(EMAIL);
     await expect(page.locator('#identity button.copy')).toHaveCount(1);
