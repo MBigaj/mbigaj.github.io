@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import Intro from '../components/home/Intro.astro';
 import IdentityPanel from '../components/home/IdentityPanel.astro';
 import TimelinePanel from '../components/home/TimelinePanel.astro';
 import ProjectsPanel from '../components/home/ProjectsPanel.astro';
@@ -41,8 +42,11 @@ const work = (await getCollection('work'))
 
 <Base
   title={`${SITE.name} · ${SITE.role}`}
+  enterAnimation
   description="Portfolio of Mikołaj Bigaj, a Python backend engineer building APIs, data stores, CI/CD pipelines and Kubernetes deployments."
 >
+  <Intro />
+  <div id="dashboard" tabindex="-1">
   <div class="pair">
     <IdentityPanel
       now={`${current.title}, ${current.employer}`}
@@ -56,4 +60,5 @@ const work = (await getCollection('work'))
     <WorkPanel entries={work} />
   </div>
   <SkillMapPanel skills={skills} />
+  </div>
 </Base>

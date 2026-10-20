@@ -1,0 +1,182 @@
+---
+import { Image } from 'astro:assets';
+import portrait from '../../assets/portrait.jpg';
+import { SITE } from '../../lib/site';
+
+const links = [
+  { label: 'GitHub', href: SITE.github },
+  { label: 'LinkedIn', href: SITE.linkedin },
+  { label: 'Download CV', href: SITE.cv },
+];
+---
+
+<section id="intro" aria-label="Introduction">
+  <div class="intro-main">
+    <figure class="frame enter-anim" style="--d: 120ms; --s: 0.98">
+      <Image
+        src={portrait}
+        alt="Mikołaj Bigaj"
+        widths={[320, 380, 640, 760]}
+        sizes="(max-width: 760px) 300px, 358px"
+        loading="eager"
+        fetchpriority="high"
+      />
+      <figcaption><span>00 / ABOUT</span><span>Poland</span></figcaption>
+    </figure>
+    <div class="text">
+      <div class="hello enter-anim" style="--d: 240ms">HELLO, I'M</div>
+      <h1 class="enter-anim" style="--d: 360ms">{SITE.name}</h1>
+      <div class="tagline enter-anim" style="--d: 480ms">{SITE.tagline}</div>
+      <p class="enter-anim" style="--d: 600ms">{SITE.about}</p>
+      <div class="intro-links enter-anim" style="--d: 720ms">
+        {links.map((l) => <a href={l.href}>{l.label}</a>)}
+      </div>
+    </div>
+  </div>
+  <div class="enter-wrap">
+    <a href="#dashboard" class="enter enter-anim" style="--d: 1000ms"><span>enter control room</span><span class="arrow" aria-hidden="true">↓</span></a>
+  </div>
+</section>
+
+<script src="./enter.ts"></script>
+
+<style>
+  #intro {
+    min-height: calc(100svh - var(--topbar-h));
+    display: flex;
+    flex-direction: column;
+  }
+  .intro-main {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 48px 72px;
+    padding: 32px 0;
+  }
+  .frame {
+    flex: 0 1 380px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 4.7;
+    object-fit: cover;
+    border-radius: 3px;
+  }
+  figcaption {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 2px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .text {
+    flex: 1 1 420px;
+    max-width: 600px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .hello {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  h1 {
+    margin: 0;
+    font-size: clamp(38px, 8vw, 64px);
+    line-height: 1.05;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    overflow-wrap: anywhere;
+  }
+  .tagline {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--text-2);
+  }
+  p {
+    margin: 0;
+    font-size: 19px;
+    line-height: 1.6;
+    color: var(--text-soft);
+  }
+  .intro-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .intro-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--btn-border);
+    border-radius: 4px;
+  }
+  .enter-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 12px;
+  }
+  .enter {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 6px 18px;
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--text-2);
+  }
+  .enter:hover {
+    color: var(--text);
+  }
+  .arrow {
+    font-size: 16px;
+    color: var(--accent);
+  }
+  @media (max-width: 760px) {
+    .intro-main {
+      flex-direction: column;
+      gap: 20px;
+      padding: 12px 0;
+    }
+    /* A wider crop keeps the whole intro and the enter link on a phone's first screen */
+    .frame img {
+      aspect-ratio: 2 / 1;
+      object-position: 50% 21%;
+    }
+    .frame {
+      flex: 0 1 auto;
+      width: 100%;
+      max-width: 320px;
+    }
+    .text {
+      flex: 0 1 auto;
+      width: 100%;
+      gap: 14px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.55;
+    }
+  }
+</style>
