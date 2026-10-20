@@ -116,3 +116,22 @@ test('the Talis page does not scroll sideways', async ({ page }) => {
   await page.goto('/projects/talis/');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test('an odd last screen spans both columns on desktop and the figure hints that it scrolls on a phone', async ({ page }, testInfo) => {
+  await page.goto('/projects/talis/');
+  const hint = page.locator('.bp-hint');
+  if (testInfo.project.name === 'desktop') {
+    const figures = page.getByRole('region', { name: 'SCREENS' }).locator('figure');
+    const [first, last, panel] = await Promise.all([
+      figures.first().boundingBox(),
+      figures.last().boundingBox(),
+      page.getByRole('region', { name: 'SCREENS' }).locator('.screens').boundingBox(),
+    ]);
+    expect(last!.width).toBeGreaterThan(first!.width * 1.9);
+    expect(Math.abs(last!.width - panel!.width)).toBeLessThan(2);
+    await expect(hint).toBeHidden();
+  } else {
+    await expect(hint).toBeVisible();
+    await expect(hint).toHaveText('scroll ↔');
+  }
+});

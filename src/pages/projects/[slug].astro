@@ -31,11 +31,13 @@ const roadmapColumns = data.roadmap
   : [];
 const hasBody = Boolean(project.body?.trim());
 
-// SCREENS lays out up to two columns inside a panel that is 1246 px wide at the
-// full 1360 px page width, with 16 px between columns; below 1000 px there is one column.
-const screenColumns = Math.min(Math.max(data.screens.length, 1), 2);
-const screenWidth = Math.round((1246 - 16 * (screenColumns - 1)) / screenColumns);
-const screenSizes = `(max-width: 999px) 100vw, ${screenWidth}px`;
+// SCREENS lays out two columns from 1000 px up inside a panel that is 1246 px wide at the
+// full 1360 px page width, with 16 px between columns; below that there is one column.
+// An odd last screen spans both columns, so it is sized for the whole panel.
+const screenSizes = (i: number) => {
+  const alone = data.screens.length % 2 === 1 && i === data.screens.length - 1;
+  return `(max-width: 999px) 100vw, ${alone ? 1246 : (1246 - 16) / 2}px`;
+};
 ---
 
 <Base title={`${data.title} · ${SITE.name}`} description={data.summary}>
@@ -120,9 +122,9 @@ const screenSizes = `(max-width: 999px) 100vw, ${screenWidth}px`;
   {data.screens.length > 0 ? (
     <Panel label="SCREENS">
       <div class="screens">
-        {data.screens.map((s) => (
+        {data.screens.map((s, i) => (
           <figure>
-            <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes} />
+            <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes(i)} />
             <figcaption>{s.caption}</figcaption>
           </figure>
         ))}
@@ -266,6 +268,9 @@ const screenSizes = `(max-width: 999px) 100vw, ${screenWidth}px`;
   @media (min-width: 1000px) {
     .screens {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .screens figure:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
     }
   }
   .screens figure {
