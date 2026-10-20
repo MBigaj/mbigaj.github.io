@@ -219,3 +219,58 @@ test.describe('the digit recognition demo without JavaScript', () => {
     await expect(demo.locator('canvas, button, a').filter({ visible: true })).toHaveCount(0);
   });
 });
+
+test('Talis shows its architecture figure, its screens and DigitalOcean in the stack', async ({ page }) => {
+  await page.goto('/projects/talis/');
+  const fig = page.locator('figure svg[role="img"]');
+  await expect(fig).toHaveCount(1);
+  for (const text of ['Django app', 'PostgreSQL', 'Recommender', 'Jupyter notebook']) await expect(fig).toContainText(text);
+  await expect(page.locator('figcaption').first()).toHaveText('Fig. 01 · System overview and recommendation model');
+  await expect(page.locator('.hero-side > div', { hasText: 'STACK' })).toContainText('DigitalOcean');
+});
+
+test('the Talis screens are in order, loaded and served resized', async ({ page }) => {
+  await page.goto('/projects/talis/');
+  const alts = [
+    'Talis home page listing the top-rated board games',
+    "A player's library of board games with ratings and dates added",
+    'A local game meeting with its games, host, crew size and a map',
+    "A player's profile with their friends list",
+    'The Talis sign-up form',
+  ];
+  const images = page.getByRole('region', { name: 'SCREENS' }).locator('img');
+  await expect(images).toHaveCount(5);
+  for (const [i, alt] of alts.entries()) {
+    const img = images.nth(i);
+    await img.scrollIntoViewIfNeeded();
+    await expect(img).toHaveAttribute('alt', alt);
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(0);
+    const src = await img.evaluate((el: HTMLImageElement) => el.currentSrc);
+    expect(src).toContain('/_astro/');
+    expect(src).not.toMatch(/\/assets\/talis\//);
+  }
+});
+
+test('the Talis page does not scroll sideways', async ({ page }) => {
+  await page.goto('/projects/talis/');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
+
+test('an odd last screen spans both columns on desktop and the figure hints that it scrolls on a phone', async ({ page }, testInfo) => {
+  await page.goto('/projects/talis/');
+  const hint = page.locator('.bp-hint');
+  if (testInfo.project.name === 'desktop') {
+    const figures = page.getByRole('region', { name: 'SCREENS' }).locator('figure');
+    const [first, last, panel] = await Promise.all([
+      figures.first().boundingBox(),
+      figures.last().boundingBox(),
+      page.getByRole('region', { name: 'SCREENS' }).locator('.screens').boundingBox(),
+    ]);
+    expect(last!.width).toBeGreaterThan(first!.width * 1.9);
+    expect(Math.abs(last!.width - panel!.width)).toBeLessThan(2);
+    await expect(hint).toBeHidden();
+  } else {
+    await expect(hint).toBeVisible();
+    await expect(hint).toHaveText('scroll ↔');
+  }
+});
