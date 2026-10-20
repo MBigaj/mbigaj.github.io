@@ -6,7 +6,14 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const dashboard = document.getElementById('dashboard');
 
 if (dashboard) {
-  const light = () => dashboard.classList.add('lit');
+  // The stagger delays are set only when lighting up: an inline transition-delay is a transition on
+  // its own (even with a 0s duration), so setting it earlier would make the dimming itself staggered.
+  const light = () => {
+    dashboard.querySelectorAll<HTMLElement>('.panel').forEach((panel, i) => {
+      panel.style.transitionDelay = `${i * 120}ms`;
+    });
+    dashboard.classList.add('lit');
+  };
 
   document.querySelector<HTMLAnchorElement>('.enter')?.addEventListener('click', (event) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
@@ -27,9 +34,6 @@ if (dashboard) {
   const landedInside = target !== null && dashboard.contains(target);
 
   if (!reduced && !landedInside && 'IntersectionObserver' in window) {
-    dashboard.querySelectorAll<HTMLElement>('.panel').forEach((panel, i) => {
-      panel.style.transitionDelay = `${i * 120}ms`;
-    });
     const observer = new IntersectionObserver(
       (entries) => {
         if (!entries.some((e) => e.isIntersecting)) return;
