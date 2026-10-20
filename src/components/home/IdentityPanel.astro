@@ -17,10 +17,50 @@ const { now, since, degree } = Astro.props;
     <div><div class="fact-label">DEGREE</div><div class="fact-value">{degree}</div></div>
   </div>
   <div class="identity-links">
-    <a class="ghost" href={`mailto:${SITE.email}`}>Email</a>
+    <span class="email" data-email>{SITE.email}</span>
+    <button class="copy" type="button" aria-label="Copy email address" hidden>Copy</button>
+    <span class="sr-only" role="status" data-copy-status></span>
     <a class="solid" href={SITE.cv}>Download CV</a>
   </div>
 </Panel>
+
+<script>
+  const RESET_MS = 2000;
+  for (const panel of document.querySelectorAll<HTMLElement>('#identity')) {
+    const address = panel.querySelector<HTMLElement>('[data-email]');
+    const button = panel.querySelector<HTMLButtonElement>('button.copy');
+    const status = panel.querySelector<HTMLElement>('[data-copy-status]');
+    if (!address || !button || !status || button.dataset.ready) continue;
+    button.dataset.ready = 'true';
+    button.hidden = false;
+    let timer: number | undefined;
+
+    const select = () => {
+      const range = document.createRange();
+      range.selectNodeContents(address);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    };
+
+    button.addEventListener('click', async () => {
+      window.clearTimeout(timer);
+      try {
+        if (!navigator.clipboard) throw new Error('no clipboard');
+        await navigator.clipboard.writeText(address.textContent?.trim() ?? '');
+        button.textContent = 'Copied';
+        status.textContent = 'Email address copied';
+        timer = window.setTimeout(() => {
+          button.textContent = 'Copy';
+          status.textContent = '';
+        }, RESET_MS);
+      } catch {
+        select();
+        status.textContent = 'Press Ctrl+C to copy';
+      }
+    });
+  }
+</script>
 
 <style>
   .facts {
@@ -54,8 +94,32 @@ const { now, since, degree } = Astro.props;
     padding: 0 16px;
     border-radius: 4px;
   }
-  .ghost {
+  .email,
+  .copy {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
     border: 1px solid var(--btn-border);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 14px;
+  }
+  .email {
+    user-select: all;
+    overflow-wrap: anywhere;
+  }
+  .copy {
+    background: none;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .copy:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .copy[hidden] {
+    display: none;
   }
   .solid {
     background: var(--text);

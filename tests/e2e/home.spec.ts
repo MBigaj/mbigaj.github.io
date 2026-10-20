@@ -89,7 +89,7 @@ test('timeline merges same-employer roles and ends with a dashed education bar',
   await expect(last).toContainText('Collegium Da Vinci');
   expect(await last.locator('.bar').evaluate((e) => getComputedStyle(e).borderTopStyle)).toBe('dashed');
 });
-test('identity panel is a status panel with facts, Email and Download CV', async ({ page }) => {
+test('identity panel is a status panel with facts, the email address and Download CV', async ({ page }) => {
   await page.goto('/');
   const id = page.locator('#identity');
   await expect(id.locator('.panel-label')).toHaveText('01 / STATUS');
@@ -98,11 +98,64 @@ test('identity panel is a status panel with facts, Email and Download CV', async
   await expect(id.locator('.facts')).toContainText('2022');
   await expect(id.locator('.facts')).toContainText('BTech Computer Science, 2025');
   const links = id.locator('.identity-links a');
-  await expect(links).toHaveText(['Email', 'Download CV']);
-  expect(await links.evaluateAll((els) => els.map((e) => e.getAttribute('href')))).toEqual([
-    'mailto:mikolaj.bigaj.00@gmail.com',
-    '/Mikolaj_Bigaj_CV.pdf',
-  ]);
+  await expect(links).toHaveText(['Download CV']);
+  await expect(links).toHaveAttribute('href', '/Mikolaj_Bigaj_CV.pdf');
+});
+
+test.describe('copyable email address', () => {
+  const EMAIL = 'mikolaj.bigaj.00@gmail.com';
+
+  test('the address is visible text and no mailto link remains', async ({ page }) => {
+    await page.goto('/');
+    await expect(page.locator('#identity .email')).toHaveText(EMAIL);
+    await expect(page.locator('a[href^="mailto:"]')).toHaveCount(0);
+    const box = (await page.locator('#identity .email').boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(await page.locator('#identity .email').evaluate((e) => getComputedStyle(e).fontFamily)).toContain('IBM Plex Mono');
+    expect((await page.getByRole('button', { name: 'Copy email address' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  });
+
+  test('Copy puts the address on the clipboard, says so, and resets after 2 s', async ({ page, context }, testInfo) => {
+    test.skip(testInfo.project.name !== 'desktop', 'clipboard permissions are granted on desktop only');
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    await page.goto('/');
+    const button = page.getByRole('button', { name: 'Copy email address' });
+    await expect(button).toHaveText('Copy');
+    await button.click();
+    await expect(button).toHaveText('Copied');
+    await expect(page.locator('#identity [role="status"]')).toHaveText('Email address copied');
+    expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(EMAIL);
+    await expect(button).toHaveText('Copy', { timeout: 4000 });
+  });
+
+  test('without a clipboard the address is selected and the user is told to press Ctrl+C', async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, 'clipboard', { value: undefined }));
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Copy email address' }).click();
+    await expect(page.locator('#identity [role="status"]')).toHaveText('Press Ctrl+C to copy');
+    expect(await page.evaluate(() => String(window.getSelection()))).toBe(EMAIL);
+  });
+
+  test('a rejected clipboard write falls back the same way', async ({ page }) => {
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText: () => Promise.reject(new Error('denied')) } }),
+    );
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Copy email address' }).click();
+    await expect(page.locator('#identity [role="status"]')).toHaveText('Press Ctrl+C to copy');
+    expect(await page.evaluate(() => String(window.getSelection()))).toBe(EMAIL);
+  });
+
+  test('without JavaScript the Copy button is hidden and the address stays', async ({ browser }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto('http://localhost:4331/');
+    await expect(page.locator('#identity .email')).toBeVisible();
+    await expect(page.locator('#identity .email')).toHaveText(EMAIL);
+    await expect(page.locator('#identity button.copy')).toHaveCount(1);
+    await expect(page.locator('#identity button.copy')).toBeHidden();
+    await context.close();
+  });
 });
 test('status markers: circle for in progress, square for shipped', async ({ page }) => {
   await page.goto('/');
