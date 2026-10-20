@@ -86,6 +86,7 @@ const projects = defineCollection({
           planned: z.array(z.string()),
         })
         .optional(),
+      demo: z.enum(['digits']).optional(),
     }),
 });
 

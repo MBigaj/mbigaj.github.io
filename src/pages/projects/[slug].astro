@@ -6,6 +6,7 @@ import Panel from '../../components/Panel.astro';
 import StatusBadge from '../../components/StatusBadge.astro';
 import BlueprintFigure from '../../components/BlueprintFigure.astro';
 import PendingSection from '../../components/PendingSection.astro';
+import DigitDemo from '../../components/DigitDemo.astro';
 import { SITE } from '../../lib/site';
 
 export async function getStaticPaths() {
@@ -74,6 +75,8 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
     <PendingSection name="PROBLEM" />
   )}
 
+  {data.demo === 'digits' && data.figures.length === 0 && <DigitDemo />}
+
   {data.figures.length > 0 ? (
     <Panel label="ARCHITECTURE">
       {data.figures.map((figure, i) => <BlueprintFigure figure={figure} number={i + 1} />)}
@@ -81,6 +84,8 @@ const screenSizes = `(max-width: 729px) 100vw, ${screenWidth}px`;
   ) : (
     <PendingSection name="ARCHITECTURE" />
   )}
+
+  {data.demo === 'digits' && data.figures.length > 0 && <DigitDemo />}
 
   {data.scaling ? (
     <Panel label="SCALING">

@@ -1,0 +1,337 @@
+---
+import Panel from './Panel.astro';
+
+const TRAINING_SCRIPT = 'https://github.com/MBigaj/mbigaj.github.io/blob/main/scripts/export-digit-model.py';
+const digits = Array.from({ length: 10 }, (_, i) => i);
+---
+
+<Panel label="TRY IT">
+  <div class="dd" data-digit-demo>
+    <p class="dd-hint" data-hint>The demo needs JavaScript.</p>
+    <div class="dd-body" data-body hidden>
+      <div class="dd-padcol">
+        <canvas
+          class="dd-pad"
+          width="280"
+          height="280"
+          tabindex="0"
+          role="img"
+          aria-label="Drawing pad. Draw a digit with the mouse, a finger or a pen; press Delete to clear it."
+        ></canvas>
+        <button type="button" class="dd-clear" data-clear>Clear</button>
+      </div>
+      <div class="dd-result">
+        <div class="dd-label">PREDICTION</div>
+        <output class="dd-digit" data-digit aria-live="polite">–</output>
+        <ol class="dd-bars" aria-label="Network outputs">
+          {
+            digits.map((d) => (
+              <li>
+                <span class="dd-n">{d}</span>
+                <span class="dd-track">
+                  <span class="dd-bar" style="--v: 0" />
+                </span>
+                <span class="dd-val">0.00</span>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="dd-caption">
+          <p>Weights trained once from the original code and exported for this page.</p>
+          <a href={TRAINING_SCRIPT}>How it was trained</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Panel>
+
+<script>
+  import { predict, preprocess, type DigitModel } from '../lib/digits';
+
+  const MODEL_URL = '/models/digit-model.json';
+  const THROTTLE_MS = 150;
+  const HINT = {
+    ready: 'Draw a digit from 0 to 9.',
+    loading: 'Loading the model…',
+    failed: 'The model could not be loaded.',
+  };
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-digit-demo]')) setUp(root);
+
+  function setUp(root: HTMLElement) {
+    const hint = root.querySelector<HTMLElement>('[data-hint]')!;
+    const body = root.querySelector<HTMLElement>('[data-body]')!;
+    const pad = root.querySelector<HTMLCanvasElement>('canvas')!;
+    const clearButton = root.querySelector<HTMLButtonElement>('[data-clear]')!;
+    const digit = root.querySelector<HTMLElement>('[data-digit]')!;
+    const rows = [...root.querySelectorAll<HTMLLIElement>('.dd-bars li')];
+    const ctx = pad.getContext('2d', { willReadFrequently: true })!;
+
+    let model: DigitModel | null = null;
+    let drawing = false;
+    let inked = false;
+    let last: [number, number] = [0, 0];
+    let timer = 0;
+
+    body.hidden = false;
+    hint.textContent = HINT.loading;
+
+    // The canvas buffer matches the pad's size in device pixels, so strokes stay crisp.
+    function fit() {
+      const size = Math.round(pad.clientWidth * devicePixelRatio);
+      if (size > 0 && size !== pad.width) {
+        pad.width = pad.height = size;
+        clear();
+      }
+    }
+
+    function show(values: number[] | null) {
+      const best = values ? values.indexOf(Math.max(...values)) : -1;
+      digit.textContent = values ? String(best) : '–';
+      rows.forEach((row, i) => {
+        const v = values ? values[i] : 0;
+        row.querySelector<HTMLElement>('.dd-bar')!.style.setProperty('--v', String(v));
+        row.querySelector('.dd-val')!.textContent = v.toFixed(2);
+        row.classList.toggle('is-top', i === best);
+      });
+    }
+
+    function run() {
+      clearTimeout(timer);
+      timer = 0;
+      if (!model) return;
+      const input = preprocess(ctx.getImageData(0, 0, pad.width, pad.height));
+      show(input.some((v) => v > 0) ? predict(model, input) : null);
+    }
+
+    function clear() {
+      ctx.clearRect(0, 0, pad.width, pad.height);
+      inked = false;
+      clearTimeout(timer);
+      timer = 0;
+      show(null);
+    }
+
+    function point(e: PointerEvent): [number, number] {
+      const r = pad.getBoundingClientRect();
+      return [((e.clientX - r.left) * pad.width) / r.width, ((e.clientY - r.top) * pad.height) / r.height];
+    }
+
+    function line(to: [number, number]) {
+      ctx.lineWidth = (18 * pad.width) / 280;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = 'white';
+      ctx.beginPath();
+      ctx.moveTo(...last);
+      ctx.lineTo(...to);
+      ctx.stroke();
+      last = to;
+      inked = true;
+    }
+
+    pad.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      pad.focus({ preventScroll: true });
+      pad.setPointerCapture(e.pointerId);
+      drawing = true;
+      last = point(e);
+      line(last);
+    });
+    pad.addEventListener('pointermove', (e) => {
+      if (!drawing) return;
+      for (const ev of e.getCoalescedEvents?.() ?? [e]) line(point(ev));
+      if (!timer) timer = window.setTimeout(run, THROTTLE_MS);
+    });
+    const end = () => {
+      if (!drawing) return;
+      drawing = false;
+      run();
+    };
+    pad.addEventListener('pointerup', end);
+    pad.addEventListener('pointercancel', end);
+    pad.addEventListener('keydown', (e) => {
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        e.preventDefault();
+        clear();
+      }
+    });
+    clearButton.addEventListener('click', clear);
+    new ResizeObserver(fit).observe(pad);
+    fit();
+
+    async function load() {
+      try {
+        const res = await fetch(MODEL_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        model = (await res.json()) as DigitModel;
+        hint.textContent = HINT.ready;
+        if (inked) run();
+      } catch {
+        hint.textContent = HINT.failed;
+      }
+    }
+
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((e) => e.isIntersecting)) return;
+          io.disconnect();
+          load();
+        },
+        { rootMargin: '200px' },
+      );
+      io.observe(root);
+    } else {
+      load();
+    }
+  }
+</script>
+
+<style>
+  .dd {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .dd-hint {
+    margin: 0;
+    color: var(--text-soft);
+  }
+  .dd-body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 24px 48px;
+  }
+  .dd-body[hidden] {
+    display: none;
+  }
+  .dd-padcol {
+    flex: 0 0 auto;
+    width: min(280px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .dd-pad {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--ground);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    touch-action: none;
+    cursor: crosshair;
+  }
+  .dd-clear {
+    align-self: flex-start;
+    min-height: 44px;
+    padding: 0 16px;
+    border: 1px solid var(--btn-border);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .dd-clear:hover {
+    color: var(--accent);
+  }
+  .dd-result {
+    flex: 1 1 260px;
+    min-width: 0;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .dd-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  .dd-digit {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 72px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--text);
+  }
+  .dd-bars {
+    list-style: none;
+    margin: 8px 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .dd-bars li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .dd-n {
+    width: 1ch;
+  }
+  .dd-track {
+    flex: 1 1 auto;
+    height: 10px;
+    background: var(--ground);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .dd-bar {
+    display: block;
+    height: 100%;
+    background: var(--muted);
+    transform-origin: left;
+    transform: scaleX(var(--v));
+    transition: transform 150ms ease-out;
+  }
+  .dd-val {
+    width: 4ch;
+    text-align: right;
+    color: var(--muted);
+  }
+  .dd-bars li.is-top {
+    color: var(--text);
+  }
+  .dd-bars li.is-top .dd-bar {
+    background: var(--accent);
+  }
+  .dd-caption {
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-2);
+  }
+  .dd-caption p {
+    margin: 0;
+  }
+  .dd-caption a {
+    display: inline-flex;
+    width: fit-content;
+    align-items: center;
+    min-height: 44px;
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .dd-caption a:hover {
+    color: var(--text);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dd-bar {
+      transition: none;
+    }
+  }
+</style>
