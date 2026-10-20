@@ -17,9 +17,19 @@ const { now, since, degree } = Astro.props;
     <div><div class="fact-label">DEGREE</div><div class="fact-value">{degree}</div></div>
   </div>
   <div class="identity-links">
-    <span class="email" data-email>{SITE.email}</span>
-    <button class="copy" type="button" aria-label="Copy email address" hidden>Copy</button>
-    <span class="sr-only" role="status" data-copy-status></span>
+    <div class="email-row">
+      <span class="email" data-email>{SITE.email}</span>
+      <button class="copy" type="button" aria-label="Copy email address" title="Copy email address" data-state="idle" hidden>
+        <svg class="icon icon-copy" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="12" height="12" rx="2" />
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+        </svg>
+        <svg class="icon icon-check" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 6 9 17l-5-5" />
+        </svg>
+      </button>
+      <span class="sr-only" role="status" data-copy-status></span>
+    </div>
     <a class="solid" href={SITE.cv}>Download CV</a>
   </div>
 </Panel>
@@ -53,7 +63,7 @@ const { now, since, degree } = Astro.props;
         status.textContent = text;
       }, 50);
       timer = window.setTimeout(() => {
-        button.textContent = 'Copy';
+        button.dataset.state = 'idle';
         status.textContent = '';
       }, RESET_MS);
     };
@@ -62,7 +72,7 @@ const { now, since, degree } = Astro.props;
       try {
         if (!navigator.clipboard) throw new Error('no clipboard');
         await navigator.clipboard.writeText(address.textContent?.trim() ?? '');
-        button.textContent = 'Copied';
+        button.dataset.state = 'copied';
         say('Email address copied');
       } catch {
         select();
@@ -92,10 +102,16 @@ const { now, since, degree } = Astro.props;
   }
   .identity-links {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
     gap: 10px;
     font-family: var(--font-mono);
     font-size: 14px;
+  }
+  .email-row {
+    display: flex;
+    align-items: stretch;
+    max-width: 100%;
   }
   .identity-links a {
     display: inline-flex;
@@ -109,17 +125,25 @@ const { now, since, degree } = Astro.props;
     display: inline-flex;
     align-items: center;
     min-height: 44px;
-    padding: 0 16px;
     border: 1px solid var(--btn-border);
-    border-radius: 4px;
     font-family: var(--font-mono);
     font-size: 14px;
   }
   .email {
+    padding: 0 16px;
+    border-radius: 4px 0 0 4px;
     user-select: all;
     overflow-wrap: anywhere;
+    min-width: 0;
   }
   .copy {
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    margin-left: -1px;
+    border-radius: 0 4px 4px 0;
     background: none;
     color: var(--text);
     cursor: pointer;
@@ -130,6 +154,16 @@ const { now, since, degree } = Astro.props;
   }
   .copy[hidden] {
     display: none;
+  }
+  .icon {
+    display: block;
+  }
+  .copy[data-state='idle'] .icon-check,
+  .copy[data-state='copied'] .icon-copy {
+    display: none;
+  }
+  .copy:focus-visible {
+    position: relative;
   }
   .solid {
     background: var(--text);

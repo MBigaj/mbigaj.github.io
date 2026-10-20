@@ -112,19 +112,38 @@ test.describe('copyable email address', () => {
     const box = (await page.locator('#identity .email').boundingBox())!;
     expect(box.height).toBeGreaterThanOrEqual(44);
     expect(await page.locator('#identity .email').evaluate((e) => getComputedStyle(e).fontFamily)).toContain('IBM Plex Mono');
-    expect((await page.getByRole('button', { name: 'Copy email address' }).boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const button = page.getByRole('button', { name: 'Copy email address' });
+    const b = (await button.boundingBox())!;
+    expect(b.width).toBeGreaterThanOrEqual(44);
+    expect(b.height).toBeGreaterThanOrEqual(44);
+    await expect(button).toHaveAttribute('title', 'Copy email address');
+    await expect(button).toHaveText('');
+    const icon = button.locator('svg.icon-copy');
+    await expect(button.locator('svg.icon-check')).toHaveAttribute('aria-hidden', 'true');
+    await expect(icon).toHaveAttribute('aria-hidden', 'true');
+    const ib = (await icon.boundingBox())!;
+    expect(Math.round(ib.width)).toBe(18);
+    expect(Math.round(ib.height)).toBe(18);
+  });
+
+  test('the Download CV link sits below the email row, left-aligned', async ({ page }) => {
+    await page.goto('/');
+    const row = (await page.locator('#identity .email-row').boundingBox())!;
+    const cv = (await page.locator('#identity').getByRole('link', { name: 'Download CV' }).boundingBox())!;
+    expect(cv.y).toBeGreaterThanOrEqual(row.y + row.height);
+    expect(Math.abs(cv.x - row.x)).toBeLessThanOrEqual(1);
   });
 
   test('Copy puts the address on the clipboard, says so, and resets after 2 s', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     await page.goto('/');
     const button = page.getByRole('button', { name: 'Copy email address' });
-    await expect(button).toHaveText('Copy');
+    await expect(button).toHaveAttribute('data-state', 'idle');
     await button.click();
-    await expect(button).toHaveText('Copied');
+    await expect(button).toHaveAttribute('data-state', 'copied');
     await expect(page.locator('#identity [role="status"]')).toHaveText('Email address copied');
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(EMAIL);
-    await expect(button).toHaveText('Copy', { timeout: 4000 });
+    await expect(button).toHaveAttribute('data-state', 'idle', { timeout: 4000 });
   });
 
   test('without a clipboard the address is selected and the user is told to press Ctrl+C', async ({ page }) => {
