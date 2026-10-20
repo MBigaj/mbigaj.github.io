@@ -80,3 +80,127 @@ test('a link in a Markdown body is underlined, accent coloured and tall enough t
   await link.focus();
   expect(await link.evaluate((a) => getComputedStyle(a).outlineStyle)).toBe('solid');
 });
+
+test.describe('the digit recognition demo', () => {
+  const PAGE = '/projects/digit-recognition/';
+  const MODEL = '/models/digit-model.json';
+
+  /** Draws through the given points, in pad coordinates (0 to 280 on a 280 px pad). */
+  async function stroke(page: import('@playwright/test').Page, points: [number, number][]) {
+    const pad = page.locator('.dd-pad');
+    await pad.scrollIntoViewIfNeeded();
+    const box = (await pad.boundingBox())!;
+    const k = box.width / 280;
+    const at = ([x, y]: [number, number]) => [box.x + x * k, box.y + y * k] as const;
+    await page.mouse.move(...at(points[0]));
+    await page.mouse.down();
+    for (const p of points.slice(1)) await page.mouse.move(...at(p), { steps: 2 });
+    await page.mouse.up();
+  }
+
+  const one: [number, number][] = Array.from({ length: 19 }, (_, i) => [140, 50 + i * 10]);
+  const zero: [number, number][] = Array.from({ length: 41 }, (_, i) => {
+    const a = (i / 40) * 2 * Math.PI;
+    return [140 + 60 * Math.sin(a), 140 - 90 * Math.cos(a)];
+  });
+
+  async function barWidths(page: import('@playwright/test').Page) {
+    return page.locator('.dd-bar').evaluateAll((els) => els.map((e) => (e as HTMLElement).style.getPropertyValue('--v')));
+  }
+
+  async function outputs(page: import('@playwright/test').Page) {
+    return page.locator('.dd-val').allTextContents();
+  }
+
+  test('shows the new summary and a TRY IT section, which other projects do not have', async ({ page }) => {
+    await page.goto(PAGE);
+    await expect(page.locator('.summary')).toHaveText(
+      'A neural network written by hand that analyses a digit drawn by hand and predicts it using classification.',
+    );
+    const demo = page.getByRole('region', { name: 'TRY IT' });
+    await expect(demo).toBeVisible();
+    await expect(demo).toContainText('Weights trained once from the original code and exported for this page.');
+    await expect(demo.getByRole('link', { name: 'How it was trained' })).toHaveAttribute(
+      'href',
+      'https://github.com/MBigaj/mbigaj.github.io/blob/main/scripts/export-digit-model.py',
+    );
+    for (const other of ['/projects/talis/', '/projects/dark-souls-app/']) {
+      await page.goto(other);
+      await expect(page.locator('main')).not.toContainText('TRY IT');
+    }
+  });
+
+  test('loads the model only when the section comes near the viewport', async ({ page }) => {
+    // Short enough that the section starts well over 200 px below the fold at either width.
+    await page.setViewportSize({ width: page.viewportSize()!.width, height: 240 });
+    const requested: string[] = [];
+    page.on('request', (r) => requested.push(new URL(r.url()).pathname));
+    await page.goto(PAGE, { waitUntil: 'load' });
+    expect(await page.locator('.dd').evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(440);
+    expect(requested).not.toContain(MODEL);
+    const loaded = page.waitForResponse((r) => new URL(r.url()).pathname === MODEL);
+    await page.locator('.dd').scrollIntoViewIfNeeded();
+    expect((await loaded).ok()).toBe(true);
+    await expect(page.locator('.dd-hint')).toHaveText('Draw a digit from 0 to 9.');
+  });
+
+  test('predicts a drawn 1 and a drawn 0', async ({ page }) => {
+    await page.goto(PAGE);
+    await page.locator('.dd').scrollIntoViewIfNeeded();
+    await expect(page.locator('.dd-hint')).toHaveText('Draw a digit from 0 to 9.');
+    const digit = page.locator('.dd-digit');
+
+    await stroke(page, one);
+    await expect(digit).not.toHaveText('–');
+    test.info().annotations.push({ type: 'drawn 1', description: `${await digit.textContent()}: ${(await outputs(page)).join(' ')}` });
+    await expect(digit).toHaveText('1');
+
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await stroke(page, zero);
+    await expect(digit).not.toHaveText('–');
+    test.info().annotations.push({ type: 'drawn 0', description: `${await digit.textContent()}: ${(await outputs(page)).join(' ')}` });
+    await expect(digit).toHaveText('0');
+  });
+
+  test('Clear and Delete reset the result', async ({ page }) => {
+    await page.goto(PAGE);
+    await page.locator('.dd').scrollIntoViewIfNeeded();
+    await expect(page.locator('.dd-hint')).toHaveText('Draw a digit from 0 to 9.');
+    const digit = page.locator('.dd-digit');
+    const empty = Array(10).fill('0');
+
+    await stroke(page, one);
+    await expect(digit).not.toHaveText('–');
+    expect(await barWidths(page)).not.toEqual(empty);
+    await page.getByRole('button', { name: 'Clear' }).click();
+    await expect(digit).toHaveText('–');
+    expect(await barWidths(page)).toEqual(empty);
+
+    await stroke(page, one);
+    await expect(digit).not.toHaveText('–');
+    await page.locator('.dd-pad').focus();
+    await page.keyboard.press('Delete');
+    await expect(digit).toHaveText('–');
+    expect(await barWidths(page)).toEqual(empty);
+  });
+
+  test('fits a phone and has a tall enough Clear button', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(PAGE);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    const clear = page.getByRole('button', { name: 'Clear' });
+    expect((await clear.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    const pad = (await page.locator('.dd-pad').boundingBox())!;
+    expect(Math.round(pad.width)).toBe(Math.round(pad.height));
+  });
+});
+
+test.describe('the digit recognition demo without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  test('says it needs JavaScript and shows nothing interactive', async ({ page }) => {
+    await page.goto('/projects/digit-recognition/');
+    const demo = page.getByRole('region', { name: 'TRY IT' });
+    await expect(demo).toContainText('The demo needs JavaScript.');
+    await expect(demo.locator('canvas, button, a').filter({ visible: true })).toHaveCount(0);
+  });
+});
