@@ -7,7 +7,7 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
 
 <Panel label="TRY IT">
   <div class="dd" data-digit-demo>
-    <p class="dd-hint" data-hint>The demo needs JavaScript.</p>
+    <p class="dd-hint" data-hint aria-live="polite">The demo needs JavaScript.</p>
     <div class="dd-body" data-body hidden>
       <div class="dd-padcol">
         <canvas
@@ -46,7 +46,7 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
 </Panel>
 
 <script>
-  import { predict, preprocess, type DigitModel } from '../lib/digits';
+  import { isDigitModel, predict, preprocess, type DigitModel } from '../lib/digits';
 
   const MODEL_URL = '/models/digit-model.json';
   const THROTTLE_MS = 150;
@@ -113,8 +113,11 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
     }
 
     function point(e: PointerEvent): [number, number] {
+      // Measured inside the border, so the stroke lands under the pointer.
       const r = pad.getBoundingClientRect();
-      return [((e.clientX - r.left) * pad.width) / r.width, ((e.clientY - r.top) * pad.height) / r.height];
+      const x = e.clientX - r.left - pad.clientLeft;
+      const y = e.clientY - r.top - pad.clientTop;
+      return [(x * pad.width) / pad.clientWidth, (y * pad.height) / pad.clientHeight];
     }
 
     function line(to: [number, number]) {
@@ -132,8 +135,6 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
 
     pad.addEventListener('pointerdown', (e) => {
       if (e.button !== 0) return;
-      e.preventDefault();
-      pad.focus({ preventScroll: true });
       pad.setPointerCapture(e.pointerId);
       drawing = true;
       last = point(e);
@@ -165,7 +166,9 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
       try {
         const res = await fetch(MODEL_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        model = (await res.json()) as DigitModel;
+        const data: unknown = await res.json();
+        if (!isDigitModel(data)) throw new Error('Unexpected model shape');
+        model = data;
         hint.textContent = HINT.ready;
         if (inked) run();
       } catch {
@@ -191,6 +194,8 @@ const digits = Array.from({ length: 10 }, (_, i) => i);
 
 <style>
   .dd {
+    user-select: none;
+    -webkit-user-select: none;
     display: flex;
     flex-direction: column;
     gap: 14px;

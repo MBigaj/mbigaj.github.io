@@ -178,10 +178,25 @@ test.describe('the digit recognition demo', () => {
 
     await stroke(page, one);
     await expect(digit).not.toHaveText('–');
-    await page.locator('.dd-pad').focus();
+    // A mouse stroke focuses the pad natively, without the keyboard focus ring.
+    const pad = page.locator('.dd-pad');
+    await expect(pad).toBeFocused();
+    expect(await pad.evaluate((el) => el.matches(':focus-visible'))).toBe(false);
     await page.keyboard.press('Delete');
     await expect(digit).toHaveText('–');
     expect(await barWidths(page)).toEqual(empty);
+  });
+
+  test('treats a model of the wrong shape as a load failure', async ({ page }) => {
+    await page.route(`**${MODEL}`, (route) =>
+      route.fulfill({ json: { layers: [{ weights: [[0]], bias: [0] }], activations: ['sigmoid'] } }),
+    );
+    await page.goto(PAGE);
+    await page.locator('.dd').scrollIntoViewIfNeeded();
+    await expect(page.locator('.dd-hint')).toHaveText('The model could not be loaded.');
+    await expect(page.locator('.dd-hint')).toHaveAttribute('aria-live', 'polite');
+    await stroke(page, one);
+    await expect(page.locator('.dd-digit')).toHaveText('–');
   });
 
   test('fits a phone and has a tall enough Clear button', async ({ page }) => {

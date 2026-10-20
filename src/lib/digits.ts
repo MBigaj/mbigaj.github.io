@@ -18,6 +18,32 @@ export interface Pixels {
 
 const SIZE = 28;
 const BOX = 20;
+/** The layer sizes the page's network has: 784 → 100 → 50 → 10. */
+const SHAPE = [784, 100, 50, 10];
+
+const isNumbers = (v: unknown, n: number): v is number[] =>
+  Array.isArray(v) && v.length === n && v.every((x) => typeof x === 'number');
+
+/** Whether fetched JSON is the 784 → 100 → 50 → 10 network, with a known activation per layer. */
+export function isDigitModel(v: unknown): v is DigitModel {
+  if (typeof v !== 'object' || v === null) return false;
+  const { layers, activations } = v as Partial<DigitModel>;
+  if (!Array.isArray(layers) || layers.length !== SHAPE.length - 1) return false;
+  if (!Array.isArray(activations) || activations.length !== layers.length) return false;
+  if (!activations.every((a) => a === 'tanh' || a === 'sigmoid')) return false;
+  return layers.every((layer, l) => {
+    const [n, m] = [SHAPE[l], SHAPE[l + 1]];
+    return (
+      Array.isArray(layer?.weights) &&
+      layer.weights.length === n &&
+      layer.weights.every((row) => isNumbers(row, m)) &&
+      isNumbers(layer.bias, m)
+    );
+  });
+}
+
+// One ink buffer, reused while a drawing is predicted every 150 ms; grown when the pad grows.
+let inkBuffer = new Float32Array(0);
 
 const activate: Record<Activation, (x: number) => number> = {
   tanh: Math.tanh,
@@ -67,14 +93,15 @@ export function preprocess(img: Pixels): Float32Array {
   const { width, height, data } = img;
   const out = new Float32Array(SIZE * SIZE);
 
-  const ink = new Float32Array(width * height);
+  if (inkBuffer.length < width * height) inkBuffer = new Float32Array(width * height);
+  const ink = inkBuffer;
   let minX = width, minY = height, maxX = -1, maxY = -1;
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       const p = (y * width + x) * 4;
       const v = ((0.299 * data[p] + 0.587 * data[p + 1] + 0.114 * data[p + 2]) / 255) * (data[p + 3] / 255);
-      if (v <= 0) continue;
       ink[y * width + x] = v;
+      if (v <= 0) continue;
       if (x < minX) minX = x;
       if (x > maxX) maxX = x;
       if (y < minY) minY = y;

@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { predict, preprocess, type DigitModel } from '../../src/lib/digits';
+import { readFileSync } from 'node:fs';
+import { isDigitModel, predict, preprocess, type DigitModel } from '../../src/lib/digits';
 
 const tanh = Math.tanh;
 const sigmoid = (x: number) => 1 / (1 + Math.exp(-x));
@@ -91,5 +92,39 @@ describe('preprocess', () => {
     expect(s.h).toBeLessThanOrEqual(21);
     expect(s.w).toBeLessThanOrEqual(3);
     expect(Math.abs(s.cx - 14)).toBeLessThanOrEqual(1);
+  });
+});
+
+describe('preprocess called again and again', () => {
+  it('gives the same answer for an image after a larger or different one', () => {
+    const square = image(280, 280, (x, y) => x < 40 && y < 40);
+    const first = preprocess(square);
+    preprocess(image(560, 560, (x, y) => x > 300 && y > 100 && y < 500));
+    expect(preprocess(square)).toEqual(first);
+    expect(preprocess(image(280, 280)).every((p) => p === 0)).toBe(true);
+  });
+});
+
+describe('isDigitModel', () => {
+  const real = JSON.parse(readFileSync('public/models/digit-model.json', 'utf8'));
+
+  it('accepts the exported 784 → 100 → 50 → 10 model', () => {
+    expect(isDigitModel(real)).toBe(true);
+  });
+
+  it('rejects anything of another shape', () => {
+    const drop = (f: (m: any) => void) => {
+      const m = structuredClone(real);
+      f(m);
+      return m;
+    };
+    expect(isDigitModel(null)).toBe(false);
+    expect(isDigitModel({})).toBe(false);
+    expect(isDigitModel(drop((m) => m.layers.pop()))).toBe(false);
+    expect(isDigitModel(drop((m) => m.layers[0].weights.pop()))).toBe(false);
+    expect(isDigitModel(drop((m) => m.layers[1].weights[3].pop()))).toBe(false);
+    expect(isDigitModel(drop((m) => m.layers[2].bias.push(0)))).toBe(false);
+    expect(isDigitModel(drop((m) => (m.activations = ['tanh', 'tanh'])))).toBe(false);
+    expect(isDigitModel(drop((m) => (m.activations[2] = 'relu')))).toBe(false);
   });
 });
