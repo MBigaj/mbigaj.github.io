@@ -82,3 +82,77 @@ test('the drop-in releases the block once it ends, so nothing stays pinned', asy
   await page.waitForTimeout(1200);
   expect(await page.locator(BLOCKS).first().evaluate((e) => e.getAnimations().length)).toBe(0);
 });
+
+// Samples the top bar every frame for 600 ms from the first frame of each new document
+const SAMPLER = `(() => {
+  window.__bar = [];
+  const t0 = performance.now();
+  const tick = () => {
+    const bar = document.querySelector('.topbar');
+    if (bar) window.__bar.push({ opacity: getComputedStyle(bar).opacity, top: bar.getBoundingClientRect().top, vt: document.documentElement.classList.contains('vt-arrival') });
+    if (performance.now() - t0 < 600) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+})();`;
+
+// Headless Chromium sometimes skips the view transition under load (the new page then simply loads, and the home bar's
+// own cold-load drop-in is correct). So try again until a navigation really arrived through a transition.
+async function barStaysStill(page: Page, from: string, scrollY: number, click: () => Promise<void>, to: RegExp) {
+  await page.addInitScript(SAMPLER);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    await page.goto(from);
+    await page.waitForTimeout(1000);
+    await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+    await click();
+    await page.waitForURL(to);
+    await page.waitForTimeout(800);
+    const samples = await page.evaluate(() => (window as any).__bar as { opacity: string; top: number; vt: boolean }[]);
+    if (!samples.some((s) => s.vt)) continue;
+    expect(samples.length).toBeGreaterThan(5);
+    for (const s of samples) {
+      expect(s.opacity, `sample ${JSON.stringify(s)}`).toBe('1');
+      expect(Math.abs(s.top - samples[samples.length - 1].top)).toBeLessThanOrEqual(1);
+    }
+    return;
+  }
+  // Headless Chromium did not run a transition in any attempt: report a skip rather than a vacuous pass.
+  // The CSS state that makes the bar settled is asserted separately, without a browser transition.
+  test.skip(true, 'no navigation arrived through a view transition');
+}
+
+test('the top bar does not blink when moving from Work to the home page', async ({ page }) => {
+  await barStaysStill(page, '/work/', 100000, () => page.locator('.brand').click(), /\/$/);
+});
+
+test('the top bar does not move when leaving a scrolled project page', async ({ page }) => {
+  await barStaysStill(page, '/projects/talis/', 1200, () => page.locator('nav').getByRole('link', { name: 'Skills' }).click(), /\/skills\/$/);
+});
+
+test('the stylesheet pins the top bar group and a view-transition arrival settles the home bar', async ({ page }) => {
+  await page.goto('/work/');
+  const rules = await page.evaluate(() => [...document.styleSheets].flatMap((s) => [...s.cssRules].map((r) => r.cssText)).join('\n'));
+  expect(rules).toMatch(/::view-transition-group\(topbar\)\s*\{[^}]*\bnone\b/);
+  expect(rules).toMatch(/html\.vt-arrival \.topbar\.enter-anim\s*\{[^}]*\bnone\b/);
+});
+
+test('a cold load of the home page still drops the top bar in', async ({ page }) => {
+  await page.goto('/');
+  expect(await page.locator('.topbar').evaluate((e) => e.getAnimations().length)).toBeGreaterThan(0);
+  expect(await page.evaluate(() => document.documentElement.classList.contains('vt-arrival'))).toBe(false);
+});
+
+test('the 404 page drops its content in and ends fully visible', async ({ page }) => {
+  await page.goto('/no-such-page/');
+  expect(Number((await state(page, BLOCKS))[0].opacity)).toBeLessThan(1);
+  await page.waitForTimeout(1200);
+  for (const s of await state(page, BLOCKS)) expect(s.opacity).toBe('1');
+});
+
+test('the Skills island content is staggered after the heading blocks', async ({ page }) => {
+  // The island holds one wrapper; it inherits the delay of the island's place among the blocks of <main>
+  await page.goto('/skills/');
+  const [back, title, map] = (await state(page, BLOCKS)).map((s) => parseFloat(s.delay) * 1000);
+  expect(title).toBeGreaterThan(back);
+  expect(map).toBeGreaterThan(title);
+  expect(map).toBeLessThanOrEqual(480);
+});
