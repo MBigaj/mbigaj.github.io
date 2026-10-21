@@ -21,6 +21,9 @@
 </dialog>
 
 <style>
+  :global(html) {
+    scrollbar-gutter: stable;
+  }
   .viewer {
     position: fixed;
     inset: 0;
@@ -74,9 +77,11 @@
   }
   .viewer-img {
     display: block;
-    max-width: 100%;
-    /* Room for the caption, the counter and the padding above and below. */
-    max-height: calc(100dvh - 190px);
+    /* The box comes from the large image's size (--w, --h set per shot), so the placeholder and the
+       large file fill the same box. 190px leaves room for the caption, counter and padding. */
+    width: min(100%, calc(var(--w, 1600) * 1px), calc((100dvh - 190px) * var(--w, 1600) / var(--h, 800)));
+    height: auto;
+    aspect-ratio: var(--w, 1600) / var(--h, 800);
     object-fit: contain;
     border: 1px solid var(--border);
     border-radius: 4px;
@@ -206,6 +211,8 @@
       caption.textContent = thumb.closest('figure')?.querySelector('figcaption')?.textContent ?? '';
       count.textContent = `${i + 1} / ${thumbs.length}`;
       // The thumbnail is already loaded: show it scaled up until the large image arrives.
+      img.style.setProperty('--w', thumb.dataset.w ?? '');
+      img.style.setProperty('--h', thumb.dataset.h ?? '');
       img.src = thumbImg.currentSrc || thumbImg.src;
       const large = new Image();
       large.onload = () => {
@@ -220,6 +227,7 @@
     }
 
     function step(by: number) {
+      if (dialog.hasAttribute('data-closing')) return;
       const next = index + by;
       if (next >= 0 && next < thumbs.length) show(next);
     }
@@ -262,9 +270,17 @@
     closeBtn.addEventListener('click', close);
     prevBtn.addEventListener('click', () => step(-1));
     nextBtn.addEventListener('click', () => step(1));
+    let pressOnStage = false;
+    dialog.addEventListener('pointerdown', (e) => {
+      pressOnStage = isStage(e.target);
+    });
+    function isStage(t: EventTarget | null) {
+      return t === dialog || (t as HTMLElement).classList.contains('viewer-stage');
+    }
     dialog.addEventListener('click', (e) => {
-      // Only the empty area counts as the backdrop; the image, caption and buttons are children.
-      if (e.target === dialog || (e.target as HTMLElement).classList.contains('viewer-stage')) close();
+      // Only the empty area counts as the backdrop, and only if the press began there too.
+      if (pressOnStage && isStage(e.target)) close();
+      pressOnStage = false;
     });
     dialog.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft') step(-1);

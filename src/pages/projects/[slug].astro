@@ -133,7 +133,7 @@ const screenSizes = (i: number) => {
       <div class="screens">
         {data.screens.map((s, i) => (
           <figure>
-            <a class="shot" href={largeScreens[i]!.src} aria-label={`Open full screen: ${s.alt}`}>
+            <a class="shot" href={largeScreens[i]!.src} data-w={largeScreens[i]!.attributes.width} data-h={largeScreens[i]!.attributes.height} aria-label={`Open full screen: ${s.alt}`}>
               <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes(i)} />
             </a>
             <figcaption>{s.caption}</figcaption>

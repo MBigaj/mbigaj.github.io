@@ -348,6 +348,65 @@ test.describe('the screenshot viewer', () => {
     await expect(dialog).toBeHidden();
   });
 
+  test('the image keeps its size when the large file replaces the placeholder', async ({ page }) => {
+    await page.goto('/projects/talis/');
+    const thumb = page.getByRole('link', { name: `Open full screen: ${ALTS[0]}` });
+    const href = (await thumb.getAttribute('href'))!;
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    await page.route(`**${href}`, async (route) => {
+      await gate;
+      await route.continue();
+    });
+    await thumb.scrollIntoViewIfNeeded();
+    await thumb.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toHaveAttribute('open', '');
+    const img = dialog.getByRole('img', { name: ALTS[0] });
+    await expect(img).toBeVisible();
+    // Let the opening scale transition finish before measuring.
+    await page.waitForTimeout(400);
+    const before = (await img.boundingBox())!;
+    const placeholderWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
+    expect(placeholderWidth).toBeLessThan(1000);
+    release();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(1000);
+    const after = (await img.boundingBox())!;
+    expect(Math.abs(after.width - before.width)).toBeLessThanOrEqual(2);
+    expect(Math.abs(after.height - before.height)).toBeLessThanOrEqual(2);
+  });
+
+  test('a press that starts on the image and ends on the empty stage does not close it', async ({ page }) => {
+    const { dialog } = await open(page);
+    const box = (await dialog.getByRole('img', { name: ALTS[0] }).boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(5, 5);
+    await page.mouse.up();
+    await page.waitForTimeout(350);
+    await expect(dialog).toBeVisible();
+  });
+
+  test('arrow keys and Next do nothing during the closing fade', async ({ page }) => {
+    const { dialog } = await open(page);
+    await dialog.evaluate((el: HTMLDialogElement) => el.setAttribute('data-closing', ''));
+    await page.keyboard.press('ArrowRight');
+    await dialog.getByRole('button', { name: 'Next screenshot' }).dispatchEvent('click');
+    await expect(dialog.locator('.viewer-count')).toHaveText('1 / 5');
+  });
+
+  test('opening the viewer does not shift the page behind', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/projects/talis/');
+    const thumb = page.getByRole('link', { name: `Open full screen: ${ALTS[0]}` });
+    await thumb.scrollIntoViewIfNeeded();
+    const before = (await thumb.boundingBox())!.x;
+    await thumb.click();
+    await expect(page.getByRole('dialog')).toHaveAttribute('open', '');
+    const after = (await thumb.boundingBox())!.x;
+    expect(Math.abs(after - before)).toBeLessThanOrEqual(0.5);
+  });
+
   test('the page behind does not scroll while it is open', async ({ page }) => {
     const { dialog } = await open(page);
     const before = await page.evaluate(() => window.scrollY);
