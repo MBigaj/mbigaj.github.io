@@ -1,12 +1,13 @@
 ---
 import { getCollection, render } from 'astro:content';
-import { Image } from 'astro:assets';
+import { Image, getImage } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import Panel from '../../components/Panel.astro';
 import StatusBadge from '../../components/StatusBadge.astro';
 import BlueprintFigure from '../../components/BlueprintFigure.astro';
 import PendingSection from '../../components/PendingSection.astro';
 import DigitDemo from '../../components/DigitDemo.astro';
+import ScreenViewer from '../../components/ScreenViewer.astro';
 import { SITE } from '../../lib/site';
 
 export async function getStaticPaths() {
@@ -35,6 +36,9 @@ const hasBody = Boolean(project.body?.trim());
 // SCREENS lays out two columns from 1000 px up inside a panel that is 1246 px wide at the
 // full 1360 px page width, with 16 px between columns; below that there is one column.
 // An odd last screen spans both columns, so it is sized for the whole panel.
+// The full-screen viewer shows each screen at up to 1920 px wide, in its own proportions.
+const largeScreens = await Promise.all(data.screens.map((s) => getImage({ src: s.src, width: 1920 })));
+
 const screenSizes = (i: number) => {
   const alone = data.screens.length % 2 === 1 && i === data.screens.length - 1;
   return `(max-width: 999px) 100vw, ${alone ? 1246 : (1246 - 16) / 2}px`;
@@ -129,7 +133,9 @@ const screenSizes = (i: number) => {
       <div class="screens">
         {data.screens.map((s, i) => (
           <figure>
-            <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes(i)} />
+            <a class="shot" href={largeScreens[i]!.src} aria-label={`Open full screen: ${s.alt}`}>
+              <Image src={s.src} alt={s.alt} widths={[420, 640, 840, 1280, 1920, 2560]} sizes={screenSizes(i)} />
+            </a>
             <figcaption>{s.caption}</figcaption>
           </figure>
         ))}
@@ -138,6 +144,8 @@ const screenSizes = (i: number) => {
   ) : (
     <PendingSection name="SCREENS" />
   )}
+
+  {data.screens.length > 0 && <ScreenViewer />}
 
   {roadmapColumns.length > 0 ? (
     <Panel label="ROADMAP">
@@ -285,7 +293,16 @@ const screenSizes = (i: number) => {
     flex-direction: column;
     gap: 8px;
   }
+  .shot {
+    display: block;
+    cursor: zoom-in;
+    border-radius: 4px;
+  }
+  .shot:hover img {
+    border-color: var(--text-2);
+  }
   .screens img {
+    display: block;
     width: 100%;
     height: auto;
     /* The screenshots differ by a few percent in shape; a common frame keeps the captions level. */
