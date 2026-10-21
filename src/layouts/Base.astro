@@ -12,7 +12,7 @@ interface Props {
   description: string;
   /** For pages with no address of their own, such as the 404 page: no canonical link, and kept out of search indexes. */
   noindex?: boolean;
-  /** Drop the top bar in on page load. The home page only. */
+  /** Home page only: drops the top bar in on page load. Every other page drops its content in instead. */
   enterAnimation?: boolean;
 }
 
@@ -34,15 +34,11 @@ const nav = [
     <title>{title}</title>
     <meta name="description" content={description} />
     {noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
-    {
-      enterAnimation && (
-        <script is:inline>
-          /* Deliberately different from the dashboard light-up check in src/components/home/enter.ts (hash inside the dashboard). Keep both in mind when changing either. */
-          /* A hash other than #intro means the visitor is going past the intro: skip the entrance, before first paint */
-          if (location.hash.length > 1 && location.hash !== '#intro') document.documentElement.classList.add('skip-entrance');
-        </script>
-      )
-    }
+    <script is:inline>
+      /* Deliberately different from the dashboard light-up check in src/components/home/enter.ts (hash inside the dashboard). Keep both in mind when changing either. */
+      /* A hash other than #intro means the visitor is going past the intro (home page) or to a target on the page: skip the entrance, before first paint */
+      if (location.hash.length > 1 && location.hash !== '#intro') document.documentElement.classList.add('skip-entrance');
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content={title} />
@@ -67,7 +63,7 @@ const nav = [
           }
         </nav>
       </header>
-      <main id="main">
+      <main id="main" class:list={{ 'page-anim': !enterAnimation }}>
         <slot />
       </main>
       <footer class="footer">
