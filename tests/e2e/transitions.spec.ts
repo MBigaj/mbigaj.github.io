@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // The top-level blocks of the main content that drop in on non-home pages
-const BLOCKS = 'main.page-anim > :not(astro-island, dialog), main.page-anim > astro-island > *';
+const BLOCKS = 'main.page-anim > :not(astro-island, dialog, style, script, link, template), main.page-anim > astro-island > *';
 const PAGES = ['/work/', '/skills/', '/projects/talis/'];
 
 const state = (page: Page, selector: string) =>
@@ -154,5 +154,6 @@ test('the Skills island content is staggered after the heading blocks', async ({
   const [back, title, map] = (await state(page, BLOCKS)).map((s) => parseFloat(s.delay) * 1000);
   expect(title).toBeGreaterThan(back);
   expect(map).toBeGreaterThan(title);
-  expect(map).toBeLessThanOrEqual(480);
+  // Hidden <style> and <script> siblings must not count: the map is the third visible block
+  expect(map).toBe(160);
 });

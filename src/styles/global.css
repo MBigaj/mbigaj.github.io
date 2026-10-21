@@ -429,24 +429,25 @@ html.vt-arrival .topbar.enter-anim {
 .page-anim > astro-island > * {
   animation: page-drop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--pd, 0ms) backwards;
 }
-.page-anim > :nth-child(2) {
+.page-anim > :nth-child(2 of :not(style, script, link, template)) {
   --pd: 80ms;
 }
-.page-anim > :nth-child(3) {
+.page-anim > :nth-child(3 of :not(style, script, link, template)) {
   --pd: 160ms;
 }
-.page-anim > :nth-child(4) {
+.page-anim > :nth-child(4 of :not(style, script, link, template)) {
   --pd: 240ms;
 }
-.page-anim > :nth-child(5) {
+.page-anim > :nth-child(5 of :not(style, script, link, template)) {
   --pd: 320ms;
 }
-.page-anim > :nth-child(6) {
+.page-anim > :nth-child(6 of :not(style, script, link, template)) {
   --pd: 400ms;
 }
-.page-anim > :nth-child(n + 7) {
+.page-anim > :nth-child(n + 7 of :not(style, script, link, template)) {
   --pd: 480ms;
 }
+/* The stagger counts visible blocks only: Astro inserts <style> and <script> next to islands at runtime */
 /* Landing on a hash: the target must not be moving when the browser scrolls to it */
 html.skip-entrance .page-anim > :not(astro-island, dialog),
 html.skip-entrance .page-anim > astro-island > * {
