@@ -307,8 +307,8 @@ html.js-enter #dashboard.lit .panel {
   opacity: 1;
   transform: none;
   transition:
-    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 900ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 @media (prefers-reduced-motion: reduce) {
   html.js-enter #dashboard .panel {
@@ -374,26 +374,39 @@ html.skip-entrance .enter .arrow {
   @view-transition {
     navigation: auto;
   }
+  /* Same-page jumps (Projects on the home page, hash links) glide; a page loaded with a hash still lands at once */
+  html {
+    scroll-behavior: smooth;
+  }
+  /* Colour, background, border and opacity ease over 200 ms on hover and focus; nothing that moves layout */
+  a,
+  button,
+  .chip {
+    transition:
+      color 200ms ease,
+      background-color 200ms ease,
+      border-color 200ms ease,
+      opacity 200ms ease;
+  }
 }
 /* The top bar stays put between pages, so only the content changes */
 .topbar {
   view-transition-name: topbar;
 }
+/* One calm hand-over: the old page dissolves over the new one, whose blocks already rise in from opacity 0.
+   Normal blending (not plus-lighter) so the pair never brightens half way. */
 @keyframes vt-out {
   to {
     opacity: 0;
   }
 }
-@keyframes vt-in {
-  from {
-    opacity: 0;
-  }
-}
 ::view-transition-old(root) {
-  animation: vt-out 180ms ease-out both;
+  animation: vt-out 450ms cubic-bezier(0.4, 0, 0.2, 1) both;
+  mix-blend-mode: normal;
 }
 ::view-transition-new(root) {
-  animation: vt-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: none;
+  mix-blend-mode: normal;
 }
 /* The top bar is not sticky, so its group must not travel from where the old page was scrolled to.
    The old snapshot stays hidden and the new one simply sits there: no blink, no slide. */
@@ -412,13 +425,13 @@ html.vt-arrival .topbar.enter-anim {
   animation: none;
 }
 
-/* Content drop-in on every page but the home page: quicker and gentler than the intro.
-   The blocks of <main> follow each other 80 ms apart; blocks after the sixth share the 480 ms cap.
+/* Content drop-in on every page but the home page: at the intro's pace.
+   The blocks of <main> follow each other 120 ms apart; blocks after the sixth share the 720 ms cap.
    The Skills page's blocks sit inside an astro-island (display: contents), so they are animated directly. */
 @keyframes page-drop-in {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-14px);
   }
   to {
     opacity: 1;
@@ -427,25 +440,25 @@ html.vt-arrival .topbar.enter-anim {
 }
 .page-anim > :not(astro-island, dialog),
 .page-anim > astro-island > * {
-  animation: page-drop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--pd, 0ms) backwards;
+  animation: page-drop-in 900ms cubic-bezier(0.22, 1, 0.36, 1) var(--pd, 0ms) backwards;
 }
 .page-anim > :nth-child(2 of :not(style, script, link, template)) {
-  --pd: 80ms;
+  --pd: 120ms;
 }
 .page-anim > :nth-child(3 of :not(style, script, link, template)) {
-  --pd: 160ms;
-}
-.page-anim > :nth-child(4 of :not(style, script, link, template)) {
   --pd: 240ms;
 }
+.page-anim > :nth-child(4 of :not(style, script, link, template)) {
+  --pd: 360ms;
+}
 .page-anim > :nth-child(5 of :not(style, script, link, template)) {
-  --pd: 320ms;
+  --pd: 480ms;
 }
 .page-anim > :nth-child(6 of :not(style, script, link, template)) {
-  --pd: 400ms;
+  --pd: 600ms;
 }
 .page-anim > :nth-child(n + 7 of :not(style, script, link, template)) {
-  --pd: 480ms;
+  --pd: 720ms;
 }
 /* The stagger counts visible blocks only: Astro inserts <style> and <script> next to islands at runtime */
 /* Landing on a hash: the target must not be moving when the browser scrolls to it */
