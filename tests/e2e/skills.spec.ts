@@ -102,6 +102,8 @@ test('the skills page has an h1', async ({ page }) => {
 
 test('picking a skill brings its evidence into view without moving focus', async ({ page }) => {
   await page.goto('/skills/');
+  // The page drops in first; smooth scrolling aims at where the section is when the pick is made
+  await page.waitForFunction(() => document.getAnimations().length === 0);
   const chip = page.locator('.chip', { hasText: 'Python' });
   await expect(chip).toHaveAttribute('aria-pressed', 'false');
   await chip.click();

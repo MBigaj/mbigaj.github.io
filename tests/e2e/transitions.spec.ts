@@ -26,7 +26,7 @@ for (const path of PAGES) {
     expect(await page.locator('.topbar').evaluate((e) => getComputedStyle(e).opacity)).toBe('1');
     const first = (await state(page, BLOCKS))[0];
     expect(Number(first.opacity)).toBeLessThan(1);
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1800);
     const all = await state(page, BLOCKS);
     expect(all.length).toBeGreaterThan(1);
     for (const s of all) {
@@ -40,8 +40,9 @@ test('later blocks start later, and the delay is capped', async ({ page }) => {
   await page.goto('/work/');
   const delays = (await state(page, BLOCKS)).map((s) => parseFloat(s.delay) * 1000);
   expect(delays[0]).toBe(0);
-  expect(delays[1]).toBeGreaterThan(delays[0]);
-  expect(Math.max(...delays)).toBeLessThanOrEqual(480);
+  expect(delays[1]).toBe(120);
+  expect(delays[2]).toBe(240);
+  expect(Math.max(...delays)).toBeLessThanOrEqual(720);
 });
 
 test('landing on a hash skips the drop-in', async ({ page }) => {
@@ -63,7 +64,7 @@ test.describe('no JavaScript', () => {
   test.use({ javaScriptEnabled: false });
   test('skills content is visible after the drop-in', async ({ page }) => {
     await page.goto('/skills/');
-    await page.waitForTimeout(1200);
+    await page.waitForTimeout(1800);
     for (const s of await state(page, BLOCKS)) expect(s.opacity).toBe('1');
     expect(await page.locator('h1').evaluate((e) => getComputedStyle(e).opacity)).toBe('1');
   });
@@ -73,13 +74,13 @@ test('clicking through from Work to Skills lands with the content visible', asyn
   await page.goto('/work/');
   await page.locator('nav').getByRole('link', { name: 'Skills' }).click();
   await expect(page).toHaveURL(/\/skills\/$/);
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1800);
   for (const s of await state(page, BLOCKS)) expect(s.opacity).toBe('1');
 });
 
 test('the drop-in releases the block once it ends, so nothing stays pinned', async ({ page }) => {
   await page.goto('/work/');
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1800);
   expect(await page.locator(BLOCKS).first().evaluate((e) => e.getAnimations().length)).toBe(0);
 });
 
@@ -102,7 +103,7 @@ async function barStaysStill(page: Page, from: string, scrollY: number, click: (
   for (let attempt = 0; attempt < 5; attempt++) {
     await page.goto(from);
     await page.waitForTimeout(1000);
-    await page.evaluate((y) => window.scrollTo(0, y), scrollY);
+    await page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), scrollY);
     await click();
     await page.waitForURL(to);
     await page.waitForTimeout(800);
@@ -144,7 +145,7 @@ test('a cold load of the home page still drops the top bar in', async ({ page })
 test('the 404 page drops its content in and ends fully visible', async ({ page }) => {
   await page.goto('/no-such-page/');
   expect(Number((await state(page, BLOCKS))[0].opacity)).toBeLessThan(1);
-  await page.waitForTimeout(1200);
+  await page.waitForTimeout(1800);
   for (const s of await state(page, BLOCKS)) expect(s.opacity).toBe('1');
 });
 
@@ -155,5 +156,58 @@ test('the Skills island content is staggered after the heading blocks', async ({
   expect(title).toBeGreaterThan(back);
   expect(map).toBeGreaterThan(title);
   // Hidden <style> and <script> siblings must not count: the map is the third visible block
-  expect(map).toBe(160);
+  expect(map).toBe(240);
+});
+
+test('the stylesheet hands over from the old page in one calm fade, without brightening', async ({ page }) => {
+  await page.goto('/work/');
+  const rules = await page.evaluate(() => [...document.styleSheets].flatMap((s) => [...s.cssRules].map((r) => r.cssText)).join('\n'));
+  const rule = (sel: string) => rules.split('}').find((r) => r.includes(sel + '{') || r.includes(sel + ' {')) ?? '';
+  expect(rule('::view-transition-new(root)')).toMatch(/animation(-name)?:\s*(none|auto ease 0s 1 normal none running none)/);
+  expect(rule('::view-transition-new(root)')).toMatch(/mix-blend-mode:\s*normal/);
+  expect(rule('::view-transition-old(root)')).toMatch(/mix-blend-mode:\s*normal/);
+  expect(rule('::view-transition-old(root)')).toMatch(/0\.45s cubic-bezier\(0\.4, 0, 0\.2, 1\)/);
+});
+
+test('page jumps scroll smoothly', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'smooth');
+});
+
+test('clicking Projects on the home page scrolls the projects section to the top', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('nav').getByRole('link', { name: 'Projects' }).click();
+  await page.waitForFunction(() => {
+    const w = window as any;
+    const y = window.scrollY;
+    const settled = w.__lastY === y && y > 0;
+    w.__lastY = y;
+    return settled;
+  }, null, { polling: 150 });
+  const top = await page.locator('#projects').evaluate((e) => e.getBoundingClientRect().top);
+  expect(top).toBeGreaterThanOrEqual(-16);
+  expect(top).toBeLessThan(200);
+  expect(page.url()).toMatch(/#projects$/);
+});
+
+test.describe('reduced motion, calm states', () => {
+  test.use({ reducedMotion: 'reduce' });
+  test('scrolling is instant and links change colour at once', async ({ page }) => {
+    await page.goto('/work/');
+    await expect(page.locator('html')).toHaveCSS('scroll-behavior', 'auto');
+    await expect(page.locator('nav').getByRole('link', { name: 'Skills' })).toHaveCSS('transition-duration', '0s');
+  });
+});
+
+test('nav links ease their colour over about 200 ms', async ({ page }) => {
+  await page.goto('/work/');
+  const link = page.locator('nav').getByRole('link', { name: 'Skills' });
+  expect(await link.evaluate((e) => getComputedStyle(e).transitionDuration)).toMatch(/^0\.2s(, 0\.2s)*$/);
+  expect(await link.evaluate((e) => getComputedStyle(e).transitionProperty)).not.toMatch(/all|width|height|margin|padding/);
+});
+
+test('the home dashboard lights up over 900 ms', async ({ page }) => {
+  await page.goto('/');
+  const found = await page.evaluate(() => [...document.styleSheets].flatMap((s) => [...s.cssRules].map((r) => r.cssText)).join('\n'));
+  expect(found).toMatch(/#dashboard\.lit \.panel[^{]*\{[^}]*opacity 0\.9s/);
 });
