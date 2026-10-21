@@ -274,3 +274,132 @@ test('an odd last screen spans both columns on desktop and the figure hints that
     await expect(hint).toHaveText('scroll ↔');
   }
 });
+
+test.describe('the screenshot viewer', () => {
+  const ALTS = [
+    'Talis home page listing the top-rated board games',
+    "A player's library of board games with ratings and dates added",
+    'A local game meeting with its games, host, crew size and a map',
+    "A player's profile with their friends list",
+    'The Talis sign-up form',
+  ];
+  const FIRST_CAPTION = 'Home page: the highest-rated games, open to visitors without an account.';
+
+  async function open(page: import('@playwright/test').Page, index = 0) {
+    await page.goto('/projects/talis/');
+    const thumb = page.getByRole('link', { name: `Open full screen: ${ALTS[index]}` });
+    await thumb.scrollIntoViewIfNeeded();
+    await thumb.click();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toHaveAttribute('open', '');
+    return { dialog, thumb };
+  }
+
+  test('opens the clicked screenshot with its caption, counter and focus on Close', async ({ page }) => {
+    const { dialog } = await open(page);
+    const img = dialog.getByRole('img', { name: ALTS[0] });
+    await expect(img).toBeVisible();
+    await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBeGreaterThan(1000);
+    expect(await img.evaluate((el: HTMLImageElement) => el.currentSrc)).toContain('/_astro/');
+    await expect(dialog).toContainText(FIRST_CAPTION);
+    await expect(dialog.locator('.viewer-count')).toHaveText('1 / 5');
+    await expect(dialog.getByRole('button', { name: 'Close' })).toBeFocused();
+    expect(await page.evaluate(() => location.pathname)).toBe('/projects/talis/');
+  });
+
+  test('steps with the buttons and the arrow keys, and hides Previous and Next at the ends', async ({ page }) => {
+    const { dialog } = await open(page);
+    const count = dialog.locator('.viewer-count');
+    const prev = dialog.getByRole('button', { name: 'Previous screenshot' });
+    const next = dialog.getByRole('button', { name: 'Next screenshot' });
+    await expect(prev).toBeHidden();
+    await next.click();
+    await expect(count).toHaveText('2 / 5');
+    await expect(dialog.getByRole('img', { name: ALTS[1] })).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(count).toHaveText('3 / 5');
+    await page.keyboard.press('ArrowLeft');
+    await expect(count).toHaveText('2 / 5');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await expect(count).toHaveText('5 / 5');
+    await expect(next).toBeHidden();
+    await expect(prev).toBeVisible();
+    await page.keyboard.press('ArrowRight');
+    await expect(count).toHaveText('5 / 5');
+  });
+
+  test('Esc closes it and focus returns to the thumbnail of the shot that was showing', async ({ page }) => {
+    const { dialog } = await open(page);
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
+    await expect(dialog.locator('.viewer-count')).toHaveText('3 / 5');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('link', { name: `Open full screen: ${ALTS[2]}` })).toBeFocused();
+  });
+
+  test('a click on the backdrop closes it and a click on the image does not', async ({ page }) => {
+    const { dialog } = await open(page);
+    await dialog.getByRole('img', { name: ALTS[0] }).click();
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(5, 5);
+    await expect(dialog).toBeHidden();
+  });
+
+  test('the page behind does not scroll while it is open', async ({ page }) => {
+    const { dialog } = await open(page);
+    const before = await page.evaluate(() => window.scrollY);
+    await page.mouse.move(200, 200);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(250);
+    expect(await page.evaluate(() => window.scrollY)).toBe(before);
+    await page.keyboard.press('Escape');
+    await expect(dialog).toBeHidden();
+    await page.mouse.wheel(0, 600);
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(before);
+  });
+
+  test('Close, Previous and Next are at least 44 by 44 px', async ({ page }) => {
+    const { dialog } = await open(page, 1);
+    for (const name of ['Close', 'Previous screenshot', 'Next screenshot']) {
+      const box = (await dialog.getByRole('button', { name }).boundingBox())!;
+      expect(box.width, name).toBeGreaterThanOrEqual(44);
+      expect(box.height, name).toBeGreaterThanOrEqual(44);
+    }
+  });
+
+  test('a swipe left on the image steps to the next shot', async ({ page }, testInfo) => {
+    test.skip(testInfo.project.name !== 'phone', 'touch swipe is checked on the phone');
+    const { dialog } = await open(page);
+    const box = (await dialog.getByRole('img', { name: ALTS[0] }).boundingBox())!;
+    const y = box.y + box.height / 2;
+    const x = box.x + box.width / 2 + 60;
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x, y }] });
+    for (let d = 20; d <= 120; d += 20)
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x - d, y }] });
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await expect(dialog.locator('.viewer-count')).toHaveText('2 / 5');
+  });
+
+  test('the page does not scroll sideways at 390 px with the viewer closed', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/projects/talis/');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
+  test.describe('without JavaScript', () => {
+    test.use({ javaScriptEnabled: false });
+    test('each thumbnail links to a large image', async ({ page }) => {
+      await page.goto('/projects/talis/');
+      const links = page.locator('.screens a');
+      await expect(links).toHaveCount(5);
+      const hrefs = await links.evaluateAll((els) => els.map((e) => e.getAttribute('href')));
+      for (const href of hrefs) expect(href).toMatch(/^\/_astro\/.+\.(webp|jpg|png|avif)$/);
+      const response = await page.goto(hrefs[0]!);
+      expect(response!.headers()['content-type']).toMatch(/^image\//);
+    });
+  });
+});
