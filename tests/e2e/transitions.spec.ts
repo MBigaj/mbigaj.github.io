@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // The top-level blocks of the main content that drop in on non-home pages
-const BLOCKS = 'main.page-anim > :not(astro-island), main.page-anim > astro-island > *';
+const BLOCKS = 'main.page-anim > :not(astro-island, dialog), main.page-anim > astro-island > *';
 const PAGES = ['/work/', '/skills/', '/projects/talis/'];
 
 const state = (page: Page, selector: string) =>
@@ -75,4 +75,10 @@ test('clicking through from Work to Skills lands with the content visible', asyn
   await expect(page).toHaveURL(/\/skills\/$/);
   await page.waitForTimeout(1200);
   for (const s of await state(page, BLOCKS)) expect(s.opacity).toBe('1');
+});
+
+test('the drop-in releases the block once it ends, so nothing stays pinned', async ({ page }) => {
+  await page.goto('/work/');
+  await page.waitForTimeout(1200);
+  expect(await page.locator(BLOCKS).first().evaluate((e) => e.getAnimations().length)).toBe(0);
 });

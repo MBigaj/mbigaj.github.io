@@ -416,9 +416,9 @@ html.skip-entrance .enter .arrow {
     transform: none;
   }
 }
-.page-anim > :not(astro-island),
+.page-anim > :not(astro-island, dialog),
 .page-anim > astro-island > * {
-  animation: page-drop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--pd, 0ms) both;
+  animation: page-drop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) var(--pd, 0ms) backwards;
 }
 .page-anim > :nth-child(2) {
   --pd: 80ms;
@@ -439,18 +439,18 @@ html.skip-entrance .enter .arrow {
   --pd: 480ms;
 }
 /* Landing on a hash: the target must not be moving when the browser scrolls to it */
-html.skip-entrance .page-anim > :not(astro-island),
+html.skip-entrance .page-anim > :not(astro-island, dialog),
 html.skip-entrance .page-anim > astro-island > * {
   animation: none;
 }
 @media print {
-  .page-anim > :not(astro-island),
+  .page-anim > :not(astro-island, dialog),
   .page-anim > astro-island > * {
     animation: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .page-anim > :not(astro-island),
+  .page-anim > :not(astro-island, dialog),
   .page-anim > astro-island > *,
   ::view-transition-group(*),
   ::view-transition-old(*),
