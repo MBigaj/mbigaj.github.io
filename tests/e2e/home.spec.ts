@@ -83,7 +83,7 @@ test('timeline merges same-employer roles and ends with a dashed education bar',
     'MH · Big Data Intern, then Junior Backend Developer',
     'WithSecure · Data Scientist Intern',
     'Blulog · Full-stack Developer',
-    'Collegium Da Vinci · BTech Computer Science',
+    'Collegium Da Vinci · BEng in Computer Science',
   ]);
   const last = page.locator('#timeline [data-row]').last();
   await expect(last).toContainText('Collegium Da Vinci');
@@ -96,7 +96,7 @@ test('identity panel is a status panel with facts, the email address and Downloa
   await expect(id.locator('h1')).toHaveCount(0);
   await expect(id.locator('.facts')).toContainText('Associate Backend Engineer, YouGov');
   await expect(id.locator('.facts')).toContainText('2022');
-  await expect(id.locator('.facts')).toContainText('BTech Computer Science, 2025');
+  await expect(id.locator('.facts')).toContainText('BEng in Computer Science, 2025');
   const links = id.locator('.identity-links a');
   await expect(links).toHaveText(['Download CV']);
   await expect(links).toHaveAttribute('href', '/Mikolaj_Bigaj_CV.pdf');
@@ -376,4 +376,12 @@ test.describe('page-load entrance', () => {
     await page.locator('#intro .enter').hover();
     expect(await state()).toEqual(['paused']);
   });
+});
+
+test('the production work panel lists four items', async ({ page }) => {
+  await page.goto('/');
+  const entries = page.locator('#work .entry');
+  await expect(entries).toHaveCount(4);
+  await expect(entries.last()).toContainText('W-04 · YouGov');
+  await expect(entries.last()).toContainText('Python 2 to 3 migration');
 });

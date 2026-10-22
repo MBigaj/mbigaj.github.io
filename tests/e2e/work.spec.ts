@@ -1,13 +1,24 @@
 import { test, expect } from '@playwright/test';
 
-test('work page lists the three YouGov pieces and the earlier roles', async ({ page }) => {
+test('work page lists the four YouGov pieces and the earlier roles', async ({ page }) => {
   await page.goto('/work/');
   await expect(page).toHaveTitle('Work · Mikołaj Bigaj');
   await expect(page.getByRole('link', { name: '← control room' })).toHaveAttribute('href', '/');
-  for (const id of ['ai-chat-api-layer', 'rpc-to-api-migration', 'lambda-to-ecs-migration', 'mh-junior', 'withsecure', 'blulog'])
+  for (const id of ['ai-chat-api-layer', 'rpc-to-api-migration', 'lambda-to-ecs-migration', 'python-2-to-3-migration', 'mh-junior', 'withsecure', 'blulog'])
     await expect(page.locator(`article#${id}`)).toBeVisible();
   await expect(page.locator('#lambda-to-ecs-migration')).toContainText('Amazon ECS');
   await expect(page.locator('main')).not.toContainText(/php|yii/i);
+});
+
+test('the Python 2 to 3 migration is listed and reachable by its anchor', async ({ page }) => {
+  await page.goto('/work/');
+  const piece = page.locator('article#python-2-to-3-migration');
+  await expect(piece).toContainText('Python 2 to 3 migration');
+  await expect(piece).toContainText(
+    'Migrating a large project from Python 2 to Python 3 as one of two developers on the work, keeping it compatible throughout and holding code quality and security to the same standard.',
+  );
+  await page.goto('/work/#python-2-to-3-migration');
+  await expect(piece).toBeInViewport();
 });
 
 test('the roles list is headed "Roles", since it starts with the current job', async ({ page }) => {
