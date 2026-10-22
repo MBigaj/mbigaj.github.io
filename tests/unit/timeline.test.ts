@@ -33,7 +33,7 @@ const roles: TimelineRole[] = [
   role('mh-i', 'MH', 'Big Data Intern', '2023-03', '2023-09'),
   role('ws', 'WithSecure', 'Data Scientist Intern', '2022-09', '2022-12'),
   role('bl', 'Blulog', 'Full-stack Developer', '2022-07', '2022-08'),
-  role('cdv', 'Collegium Da Vinci', 'BTech Computer Science', '2021-10', '2025-03', 'education'),
+  role('cdv', 'Collegium Da Vinci', 'BEng in Computer Science', '2021-10', '2025-03', 'education'),
 ];
 
 test('consecutive roles at one employer merge, trimming repeated words', () => {
